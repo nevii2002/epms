@@ -9,13 +9,13 @@ router.use(verifyToken);
 
 // Admin only routes for management (Except GET / which handles its own role scoping)
 router.get('/', staffController.getAllStaff);
+router.get('/my-kpis', staffController.getMyKPIs);
 router.get('/:id', isAdminOrManager, staffController.getStaffById);
 router.post('/', isAdmin, staffController.createStaff);
 router.put('/:id', isAdmin, staffController.updateStaff);
 router.delete('/:id', isAdmin, staffController.deleteStaff);
 
 // KPI Assignments
-router.get('/my-kpis', verifyToken, staffController.getMyKPIs);
 router.get('/:id/kpis', isAdminOrManager, staffController.getEmployeeKPIs);
 router.post('/:id/kpis', isAdmin, staffController.assignKPIs);
 

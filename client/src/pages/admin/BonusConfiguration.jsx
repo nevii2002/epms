@@ -7,10 +7,6 @@ const BonusConfiguration = () => {
     const [employees, setEmployees] = useState([]);
     const [rows, setRows] = useState([]);
 
-    useEffect(() => {
-        fetchEmployees();
-    }, []);
-
     const fetchEmployees = async () => {
         try {
             const response = await api.get('/staff');
@@ -22,12 +18,6 @@ const BonusConfiguration = () => {
             console.error(error);
         }
     };
-
-    useEffect(() => {
-        if (selectedEmployee) {
-            fetchEmployeeData(selectedEmployee);
-        }
-    }, [selectedEmployee]);
 
     const fetchEmployeeData = async (empId) => {
         try {
@@ -60,6 +50,16 @@ const BonusConfiguration = () => {
             console.error(e);
         }
     };
+
+    useEffect(() => {
+        Promise.resolve().then(fetchEmployees);
+    }, []);
+
+    useEffect(() => {
+        if (selectedEmployee) {
+            Promise.resolve().then(() => fetchEmployeeData(selectedEmployee));
+        }
+    }, [selectedEmployee]);
 
     const handleInputChange = (id, field, value) => {
         setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));

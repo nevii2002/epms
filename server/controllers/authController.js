@@ -9,6 +9,7 @@ const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 let transporter = null;
 
@@ -124,9 +125,22 @@ exports.forgotPassword = async (req, res) => {
                 console.log(`Password reset email sent to ${email}`);
             } catch (mailError) {
                 console.error("Error sending email:", mailError);
+                if (!IS_PRODUCTION) {
+                    return res.json({
+                        message: 'Email could not be sent because SMTP is not working. Use the reset link below.',
+                        resetLink
+                    });
+                }
+                return res.status(500).json({ message: 'Failed to send reset email. Please contact your administrator.' });
             }
         } else {
             console.log(`[DEV] Reset link for ${email}: ${resetLink}`);
+            if (!IS_PRODUCTION) {
+                return res.json({
+                    message: 'SMTP email is not configured. Use the reset link below.',
+                    resetLink
+                });
+            }
         }
 
         res.json({ message: 'If an account exists, a reset link has been sent to your email.' });

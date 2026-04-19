@@ -3,10 +3,10 @@ import api from '../../api/axios';
 import { UserCircle, Mail, Phone, Briefcase, Lock, Shield, CheckCircle, Save, Camera } from 'lucide-react';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 
 const ProfileSettings = () => {
-    const { user, updateUser } = useAuth();
+    const { updateUser } = useAuth();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 

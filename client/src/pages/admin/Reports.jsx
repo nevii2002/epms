@@ -3,7 +3,6 @@ import api from '../../api/axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FileText, Download, Loader, Filter } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const Reports = () => {
     const [loading, setLoading] = useState(false);

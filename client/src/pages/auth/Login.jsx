@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { Eye, EyeOff } from 'lucide-react';
 
 
@@ -23,7 +23,7 @@ const Login = () => {
             const user = await login(formData.email, formData.password);
 
             // Redirect based on role
-            if (user.role === 'Admin' || user.role === 'Manager') {
+            if (user.role === 'Admin' || user.role === 'CEO' || user.role === 'Manager') {
                 navigate('/admin/dashboard');
             } else {
                 navigate('/user/dashboard');

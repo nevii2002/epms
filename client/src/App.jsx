@@ -44,7 +44,7 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Admin Routes - Protected */}
-          <Route element={<PrivateRoute allowedRoles={['Admin', 'Manager']} />}>
+          <Route element={<PrivateRoute allowedRoles={['Admin', 'CEO', 'Manager']} />}>
             <Route path="/admin" element={<MainLayout role="admin" />}>
               <Route path="dashboard" element={<Dashboard role="Admin" />} />
               <Route path="staff" element={<StaffManagement />} />

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import StarRating from '../../components/StarRating';
-import api from '../../api/axios';
 
 const SelfEvaluation = () => {
     // Hardcoded KPIs to match the specific requirement

@@ -8,10 +8,6 @@ const TeamOverview = () => {
     const [team, setTeam] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchTeam();
-    }, []);
-
     const fetchTeam = async () => {
         try {
             const res = await api.get('/staff');
@@ -22,6 +18,10 @@ const TeamOverview = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        Promise.resolve().then(fetchTeam);
+    }, []);
 
     if (loading) {
         return (

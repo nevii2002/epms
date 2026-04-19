@@ -17,15 +17,15 @@ const verifyToken = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-    if (req.user.role !== 'Admin') {
-        return res.status(403).json({ message: 'Require Admin Role' });
+    if (req.user.role !== 'Admin' && req.user.role !== 'CEO') {
+        return res.status(403).json({ message: 'Require Admin or CEO Role' });
     }
     next();
 };
 
 const isAdminOrManager = (req, res, next) => {
-    if (req.user.role !== 'Admin' && req.user.role !== 'Manager') {
-        return res.status(403).json({ message: 'Require Admin or Manager Role' });
+    if (req.user.role !== 'Admin' && req.user.role !== 'CEO' && req.user.role !== 'Manager') {
+        return res.status(403).json({ message: 'Require Admin, CEO, or Manager Role' });
     }
     next();
 };

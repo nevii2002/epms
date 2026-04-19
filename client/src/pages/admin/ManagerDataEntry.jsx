@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Save, BarChart2, Plus, Pencil, Trash2 } from 'lucide-react';
 import api from '../../api/axios';
 
 const ManagerDataEntry = () => {
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(2026);
+    const [selectedMonth, setSelectedMonth] = useState(3);
 
     const [metrics, setMetrics] = useState([]);
     const [logs, setLogs] = useState({});
@@ -17,7 +17,7 @@ const ManagerDataEntry = () => {
     const [editingMetric, setEditingMetric] = useState(null); // null = add mode
     const [modalData, setModalData] = useState({ name: '', description: '', unit: '' });
 
-    const fetchMetricsAndLogs = async () => {
+    const fetchMetricsAndLogs = useCallback(async () => {
         try {
             const metricsRes = await api.get('/company-data/metrics');
             setMetrics(metricsRes.data);
@@ -33,11 +33,11 @@ const ManagerDataEntry = () => {
         } catch (err) {
             console.error('Failed to load company data', err);
         }
-    };
+    }, [selectedYear, selectedMonth]);
 
     useEffect(() => {
         fetchMetricsAndLogs();
-    }, [selectedYear, selectedMonth]);
+    }, [fetchMetricsAndLogs]);
 
     const handleSaveTrack = async (metricId) => {
         setSaving(true);
@@ -49,7 +49,7 @@ const ManagerDataEntry = () => {
             await api.post('/company-data/logs', { metricId, period, value });
             setMessage('Value saved successfully');
             setTimeout(() => setMessage(''), 3000);
-        } catch (err) {
+        } catch {
             setMessage('Failed to save value');
         } finally {
             setSaving(false);

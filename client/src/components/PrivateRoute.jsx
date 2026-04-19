@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const PrivateRoute = ({ allowedRoles }) => {
     const { user } = useAuth();
@@ -11,7 +11,7 @@ const PrivateRoute = ({ allowedRoles }) => {
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         // Redirect to appropriate dashboard based on actual role if trying to access unauthorized route
-        if (user.role === 'Admin' || user.role === 'Manager') {
+        if (user.role === 'Admin' || user.role === 'CEO' || user.role === 'Manager') {
             return <Navigate to="/admin/dashboard" replace />;
         } else {
             return <Navigate to="/user/dashboard" replace />;

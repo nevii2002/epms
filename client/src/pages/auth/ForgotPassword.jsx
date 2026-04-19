@@ -6,14 +6,17 @@ const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [resetLink, setResetLink] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setMessage('');
+        setResetLink('');
         try {
             const res = await axios.post('/auth/forgot-password', { email });
             setMessage(res.data.message);
+            setResetLink(res.data.resetLink || '');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to send reset link');
         }
@@ -44,6 +47,14 @@ const ForgotPassword = () => {
                         {message && (
                             <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded text-sm">
                                 {message}
+                            </div>
+                        )}
+                        {resetLink && (
+                            <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded text-sm break-words">
+                                <p className="font-semibold mb-2">Reset link:</p>
+                                <a href={resetLink} className="underline hover:text-blue-900">
+                                    {resetLink}
+                                </a>
                             </div>
                         )}
                         <div>

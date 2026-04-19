@@ -17,10 +17,6 @@ const Analytics = () => {
     });
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchAnalyticsData();
-    }, []);
-
     const fetchAnalyticsData = async () => {
         try {
             const res = await api.get('/analytics/dashboard');
@@ -31,6 +27,10 @@ const Analytics = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        Promise.resolve().then(fetchAnalyticsData);
+    }, []);
 
     if (loading) {
         return (

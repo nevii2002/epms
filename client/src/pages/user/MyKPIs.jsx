@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { Target, PieChart, TrendingUp, Award, Save } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 
 const MyKPIs = () => {
     const { user } = useAuth();
     const [kpis, setKpis] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(2026);
+    const [selectedMonth, setSelectedMonth] = useState(4);
     const [logs, setLogs] = useState({});
     const [message, setMessage] = useState('');
     const [saving, setSaving] = useState(false);
@@ -79,7 +79,7 @@ const MyKPIs = () => {
 
             setMessage('Metric successfully logged!');
             setTimeout(() => setMessage(''), 3000);
-        } catch (err) {
+        } catch {
             setMessage('Failed to save metric.');
         } finally {
             setSaving(false);

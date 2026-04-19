@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { User, Mail, Briefcase, Phone, MapPin, Calendar, ArrowLeft, DollarSign, Award, Trash2, Save } from 'lucide-react';
+import { User, Mail, Phone, Calendar, ArrowLeft, DollarSign, Award, Trash2, Save } from 'lucide-react';
 import api from '../../api/axios';
 
 // ------ Editable Job Details sub-component ------
@@ -26,7 +26,7 @@ const EditableJobDetails = ({ staffId, staff, onSaved }) => {
             onSaved(res.data.user || form);
             setMsg('Saved successfully!');
             setTimeout(() => setMsg(''), 3000);
-        } catch (e) {
+        } catch {
             setMsg('Failed to save. Please try again.');
         } finally { setSaving(false); }
     };
@@ -89,7 +89,6 @@ const StaffProfile = () => {
     const [allKpis, setAllKpis] = useState([]);
     const [activeTab, setActiveTab] = useState('Profile');
     const [isSaving, setIsSaving] = useState(false);
-    const [salary, setSalary] = useState(0);
     const [bonuses, setBonuses] = useState([]);
     const [newBonus, setNewBonus] = useState({ amount: '', reason: '' });
 
@@ -102,9 +101,6 @@ const StaffProfile = () => {
                     ...response.data,
                     joinDate: new Date(response.data.createdAt).toLocaleDateString()
                 });
-                setSalary(response.data.basicSalary || 0);
-
-
                 // Fetch Assigned KPIs
                 const kpiResponse = await api.get(`/staff/${id}/kpis`);
                 // Fetch All KPIs (to select from)
@@ -223,8 +219,6 @@ const StaffProfile = () => {
     if (isLoading) return <div className="p-6 text-center text-gray-500">Loading Profile...</div>;
     if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
     if (!staff) return <div className="p-6 text-center text-gray-500">User not found</div>;
-
-    const quantitativeKpis = allKpis.filter(k => k.category === 'Quantitative');
 
     return (
         <div>

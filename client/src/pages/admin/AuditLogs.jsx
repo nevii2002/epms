@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../api/axios';
 
 const AuditLogs = () => {
@@ -10,10 +10,8 @@ const AuditLogs = () => {
     const [actionFilter, setActionFilter] = useState('');
     const [resourceFilter, setResourceFilter] = useState('');
 
-    const fetchLogs = async () => {
+    const fetchLogs = useCallback(async () => {
         try {
-            setLoading(true);
-
             const config = {
                 params: {}
             };
@@ -29,11 +27,11 @@ const AuditLogs = () => {
             setError('Failed to fetch audit logs');
             setLoading(false);
         }
-    };
+    }, [actionFilter, resourceFilter]);
 
     useEffect(() => {
-        fetchLogs();
-    }, [actionFilter, resourceFilter]);
+        Promise.resolve().then(fetchLogs);
+    }, [fetchLogs]);
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleString();

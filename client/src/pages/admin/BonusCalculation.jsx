@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Calculator, DollarSign, Award, AlertCircle, CheckCircle } from 'lucide-react';
+import { Calculator, DollarSign } from 'lucide-react';
 import api from '../../api/axios';
 
 const BonusCalculation = () => {
@@ -80,28 +79,22 @@ const BonusCalculation = () => {
         let payoutPercentage = 0;
         let label = 'Not Met';
         let labelColor = 'text-red-500';
-        let icon = AlertCircle;
-
         if (achievementRatio >= 120) {
             payoutPercentage = 1.5; // 150%
             label = 'Exceeded 🚀';
             labelColor = 'text-purple-600';
-            icon = Award;
         } else if (achievementRatio >= 100) {
             payoutPercentage = 1.0; // 100%
             label = 'Met ✅';
             labelColor = 'text-green-600';
-            icon = CheckCircle;
         } else if (achievementRatio >= 85) {
             payoutPercentage = 0.5; // 50%
             label = 'Partially Met ⚠️';
             labelColor = 'text-yellow-600';
-            icon = AlertCircle;
         } else {
             payoutPercentage = 0; // 0%
             label = 'Not Met ❌';
             labelColor = 'text-red-500';
-            icon = AlertCircle;
         }
 
         const earned = bonusPotential * payoutPercentage * (row.weight / 100);

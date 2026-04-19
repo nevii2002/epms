@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 import {
@@ -20,9 +20,6 @@ const Policies = () => {
     const [uploading, setUploading] = useState(false);
     const [uploadTitle, setUploadTitle] = useState('');
     const [uploadFile, setUploadFile] = useState(null);
-
-    // PDF Viewer State
-    const [viewingPolicy, setViewingPolicy] = useState(null);
 
     useEffect(() => {
         fetchPolicies();
@@ -112,14 +109,6 @@ const Policies = () => {
     };
 
     // Convert bytes to MB/KB
-    const formatSize = (bytes) => {
-        if (!bytes) return 'Unknown size';
-        const k = 1024;
-        if (bytes < k) return bytes + ' Bytes';
-        else if (bytes < k * k) return (bytes / k).toFixed(2) + ' KB';
-        else return (bytes / (k * k)).toFixed(2) + ' MB';
-    }
-
     return (
         <div className="space-y-6">
             {/* Header */}

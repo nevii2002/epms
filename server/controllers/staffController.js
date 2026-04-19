@@ -32,7 +32,12 @@ exports.getStaffById = async (req, res) => {
     try {
         const { id } = req.params;
         const user = await User.findByPk(id, {
-            attributes: { exclude: ['password'] }
+            attributes: { exclude: ['password'] },
+            include: [{
+                model: KPI,
+                as: 'assignedKPIs',
+                through: { attributes: ['customWeight', 'customBonus'] }
+            }]
         });
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.json(user);
