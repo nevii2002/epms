@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { Users, Phone, Mail, Briefcase, Award } from 'lucide-react';
+
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 
 const TeamOverview = () => {
     const [team, setTeam] = useState([]);
@@ -12,9 +14,7 @@ const TeamOverview = () => {
 
     const fetchTeam = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/staff', {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.get('/staff');
             setTeam(res.data);
             setLoading(false);
         } catch (error) {
@@ -43,7 +43,7 @@ const TeamOverview = () => {
                     <div key={member.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col items-center hover:shadow-md transition-shadow">
                         {member.profilePicture ? (
                             <img
-                                src={`http://localhost:5000${member.profilePicture}`}
+                                src={`${API_BASE}${member.profilePicture}`}
                                 alt={member.username}
                                 className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm mb-4"
                             />

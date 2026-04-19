@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { Star, Eye, Calendar, UserCheck } from 'lucide-react';
 
 const MyEvaluations = () => {
@@ -13,9 +13,7 @@ const MyEvaluations = () => {
 
     const fetchEvaluations = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/evaluations', {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.get('/evaluations');
             setEvaluations(res.data);
         } catch (error) {
             console.error("Error fetching evaluations:", error);
@@ -27,9 +25,7 @@ const MyEvaluations = () => {
     // Helper to fetch details when clicking view
     const handleViewDetails = async (evalId) => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/evaluations/${evalId}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.get(`/evaluations/${evalId}`);
             setSelectedEval(res.data);
         } catch (error) {
             console.error("Error fetching details:", error);

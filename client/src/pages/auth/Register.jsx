@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/axios';
 import { Eye, EyeOff } from 'lucide-react';
 
 const Register = () => {
@@ -26,7 +26,7 @@ const Register = () => {
         setLoading(true);
 
         try {
-            await axios.post('http://localhost:5000/api/auth/register', formData);
+            await api.post('/auth/register', formData);
             alert('Registration successful! Please login.');
             navigate('/login');
         } catch (err) {

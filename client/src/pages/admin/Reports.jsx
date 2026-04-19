@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FileText, Download, Loader, Filter } from 'lucide-react';
@@ -20,9 +20,7 @@ const Reports = () => {
 
     const fetchEmployees = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/staff', {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.get('/staff');
             setEmployees(res.data);
         } catch (error) {
             console.error("Error fetching staff:", error);
@@ -38,9 +36,7 @@ const Reports = () => {
     const generateBonusReport = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('http://localhost:5000/api/bonuses', {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const response = await api.get('/bonuses');
 
             // Filter Logic
             const bonuses = response.data.filter(b => {
@@ -95,9 +91,7 @@ const Reports = () => {
         setLoading(true);
         try {
             // Fetch Evaluations instead of just Staff
-            const response = await axios.get('http://localhost:5000/api/evaluations', {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const response = await api.get('/evaluations');
 
             // Filter Logic
             const evaluations = response.data.filter(e => {

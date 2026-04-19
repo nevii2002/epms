@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { Target, PieChart, TrendingUp, Award, Save } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,9 +18,7 @@ const MyKPIs = () => {
         const fetchKpis = async () => {
             try {
                 // Ensure we hit the 'my-kpis' endpoint we just created
-                const res = await axios.get('http://localhost:5000/api/staff/my-kpis', {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                });
+                const res = await api.get('/staff/my-kpis');
                 setKpis(res.data);
             } catch (error) {
                 console.error("Error fetching KPIs:", error);
@@ -38,9 +36,7 @@ const MyKPIs = () => {
         const fetchLogs = async () => {
             try {
                 const period = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-                const logsRes = await axios.get(`http://localhost:5000/api/quantitative/${user.id}?period=${period}`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                });
+                const logsRes = await api.get(`/quantitative/${user.id}?period=${period}`);
                 const newLogs = {};
                 logsRes.data.forEach(log => {
                     newLogs[log.kpiId] = {
@@ -68,13 +64,11 @@ const MyKPIs = () => {
                 return;
             }
 
-            const res = await axios.post('http://localhost:5000/api/quantitative', {
+            const res = await api.post('/quantitative', {
                 employeeId: user.id,
                 kpiId,
                 period,
                 actualValue
-            }, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
 
             // Update log with accurate Date Last Updated from server response

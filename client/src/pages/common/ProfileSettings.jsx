@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { UserCircle, Mail, Phone, Briefcase, Lock, Shield, CheckCircle, Save, Camera } from 'lucide-react';
+
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 import { useAuth } from '../../context/AuthContext';
 
 const ProfileSettings = () => {
@@ -37,9 +39,7 @@ const ProfileSettings = () => {
 
     const fetchProfile = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/auth/profile', {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.get('/auth/profile');
             setProfile(res.data);
             setEditData({
                 username: res.data.username || '',
@@ -59,9 +59,7 @@ const ProfileSettings = () => {
         setMessage(null);
         setError(null);
         try {
-            const res = await axios.put('http://localhost:5000/api/auth/profile', editData, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.put('/auth/profile', editData);
             setMessage(res.data.message);
             setProfile(res.data.user);
         } catch (error) {
@@ -79,11 +77,9 @@ const ProfileSettings = () => {
         }
 
         try {
-            const res = await axios.put('http://localhost:5000/api/auth/change-password', {
+            const res = await api.put('/auth/change-password', {
                 currentPassword: passwordData.currentPassword,
                 newPassword: passwordData.newPassword
-            }, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setMessage(res.data.message);
             setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -104,11 +100,8 @@ const ProfileSettings = () => {
         setMessage(null);
 
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/profile-picture', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
+            const res = await api.post('/auth/profile-picture', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             setMessage(res.data.message);
             setProfile(prev => ({ ...prev, profilePicture: res.data.profilePicture }));
@@ -144,7 +137,7 @@ const ProfileSettings = () => {
                             <div className="relative w-24 h-24 mx-auto mb-4 group">
                                 {profile?.profilePicture ? (
                                     <img
-                                        src={`http://localhost:5000${profile.profilePicture}`}
+                                        src={`${API_BASE}${profile.profilePicture}`}
                                         alt="Profile"
                                         className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-sm"
                                     />

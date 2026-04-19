@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const AuditLogs = () => {
     const [logs, setLogs] = useState([]);
@@ -13,17 +13,15 @@ const AuditLogs = () => {
     const fetchLogs = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
 
             const config = {
-                headers: { Authorization: `Bearer ${token}` },
                 params: {}
             };
 
             if (actionFilter) config.params.action = actionFilter;
             if (resourceFilter) config.params.resource = resourceFilter;
 
-            const response = await axios.get('http://localhost:5000/api/audit-logs', config);
+            const response = await api.get('/audit-logs', config);
             setLogs(response.data);
             setLoading(false);
         } catch (err) {

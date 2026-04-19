@@ -1,6 +1,8 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 import {
     LayoutDashboard,
     Users,
@@ -109,7 +111,7 @@ const MainLayout = ({ role = 'user' }) => {
                             className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold hover:bg-blue-200 focus:outline-none transition-colors cursor-pointer overflow-hidden shadow-sm"
                         >
                             {user?.profilePicture ? (
-                                <img src={`http://localhost:5000${user.profilePicture}`} alt="Avatar" className="w-full h-full object-cover" />
+                                <img src={`${API_BASE}${user.profilePicture}`} alt="Avatar" className="w-full h-full object-cover" />
                             ) : (
                                 role === 'admin' ? 'A' : 'U'
                             )}

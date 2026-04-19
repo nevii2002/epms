@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
+
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 import {
     FileText, Upload, Plus, X, Download, Eye, Trash2, ShieldAlert
 } from 'lucide-react';
@@ -29,9 +31,7 @@ const Policies = () => {
     const fetchPolicies = async () => {
         try {
             setLoading(true);
-            const res = await axios.get('http://localhost:5000/api/policies', {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.get('/policies');
             setPolicies(res.data);
             setError('');
         } catch (err) {
@@ -74,11 +74,8 @@ const Policies = () => {
 
         try {
             setUploading(true);
-            await axios.post('http://localhost:5000/api/policies/upload', formData, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'multipart/form-data'
-                }
+            await api.post('/policies/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             setShowUploadModal(false);
@@ -97,9 +94,7 @@ const Policies = () => {
         if (!window.confirm('Are you sure you want to delete this policy document?')) return;
 
         try {
-            await axios.delete(`http://localhost:5000/api/policies/${id}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await api.delete(`/policies/${id}`);
             fetchPolicies();
         } catch (err) {
             console.error('Error deleting policy:', err);
@@ -110,7 +105,7 @@ const Policies = () => {
     const openPdfViewer = (policy) => {
         // Construct the full URL for the PDF
         const normalizedPath = policy.filePath.replace(/\\/g, '/');
-        const fileUrl = `http://localhost:5000/${normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath}`;
+        const fileUrl = `${API_BASE}/${normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath}`;
 
         // Open the PDF in a new browser tab securely
         window.open(fileUrl, '_blank', 'noopener,noreferrer');
@@ -213,7 +208,7 @@ const Policies = () => {
                                     View
                                 </button>
                                 <a
-                                    href={`http://localhost:5000/${policy.filePath.replace(/\\/g, '/').startsWith('/') ? policy.filePath.replace(/\\/g, '/').slice(1) : policy.filePath.replace(/\\/g, '')}`}
+                                    href={`${API_BASE}/${policy.filePath.replace(/\\/g, '/').startsWith('/') ? policy.filePath.replace(/\\/g, '/').slice(1) : policy.filePath.replace(/\\/g, '')}`}
                                     download={policy.fileName}
                                     target="_blank"
                                     rel="noreferrer"

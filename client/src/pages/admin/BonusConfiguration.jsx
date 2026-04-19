@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { Edit, Save } from 'lucide-react';
 
 const BonusConfiguration = () => {
@@ -13,10 +13,7 @@ const BonusConfiguration = () => {
 
     const fetchEmployees = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/staff', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/staff');
             setEmployees(response.data);
             if (response.data.length > 0) {
                 setSelectedEmployee(response.data[0].id);
@@ -34,10 +31,7 @@ const BonusConfiguration = () => {
 
     const fetchEmployeeData = async (empId) => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await axios.get(`http://localhost:5000/api/staff/${empId}/kpis`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.get(`/staff/${empId}/kpis`);
 
             if (res.data && res.data.length > 0) {
                 const mappedRows = res.data.map(k => ({

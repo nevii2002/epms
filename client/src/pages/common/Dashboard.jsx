@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-
 import { Users, Activity, Award } from 'lucide-react';
+
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 
 const Dashboard = ({ role }) => {
     const [stats, setStats] = useState({ totalStaff: 0, totalKPIs: 0, avgPerformance: 0 });
@@ -107,7 +108,7 @@ const Dashboard = ({ role }) => {
                         <div className="relative flex-shrink-0">
                             <div className="h-20 w-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-white flex items-center justify-center">
                                 {stats.employeeOfTheMonth.profilePicture ? (
-                                    <img src={`http://localhost:5000${stats.employeeOfTheMonth.profilePicture}`} alt="Avatar" className="h-full w-full object-cover" />
+                                    <img src={`${API_BASE}${stats.employeeOfTheMonth.profilePicture}`} alt="Avatar" className="h-full w-full object-cover" />
                                 ) : (
                                     <span className="text-3xl font-bold text-yellow-500">{stats.employeeOfTheMonth?.username?.charAt(0).toUpperCase() || 'E'}</span>
                                 )}
@@ -145,7 +146,7 @@ const Dashboard = ({ role }) => {
                             <div key={emp.id} className="border border-gray-200 rounded-lg p-4 flex items-center bg-red-50/30">
                                 <div className="h-12 w-12 rounded-full border-2 border-red-100 bg-white flex items-center justify-center overflow-hidden mr-4">
                                     {emp.profilePicture ? (
-                                        <img src={`http://localhost:5000${emp.profilePicture}`} alt="Avatar" className="h-full w-full object-cover" />
+                                        <img src={`${API_BASE}${emp.profilePicture}`} alt="Avatar" className="h-full w-full object-cover" />
                                     ) : (
                                         <span className="font-bold text-red-500">{emp.username?.charAt(0).toUpperCase()}</span>
                                     )}
