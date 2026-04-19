@@ -77,7 +77,7 @@ async function seedAdminIfEmpty() {
 }
 
 // Database synchronization and Server Start
-sequelize.sync({ alter: true })
+sequelize.sync({ alter: false })
   .then(async () => {
     console.log('Database connected and synced');
     await seedAdminIfEmpty();

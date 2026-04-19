@@ -14,26 +14,25 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install --omit=dev
-        working-directory: ./server
-
       - name: Login to Azure
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Zip and deploy backend
+      - name: Zip and deploy backend (source only)
         run: |
           cd server
-          zip -r ../backend.zip . --exclude "*.sqlite" --exclude "uploads/*"
+          zip -r ../backend.zip . \
+            --exclude "node_modules/*" \
+            --exclude "*.sqlite" \
+            --exclude "uploads/*"
           cd ..
           az webapp deploy \
             --resource-group epms-rg \
             --name epms-backend \
             --src-path backend.zip \
             --type zip \
-            --async false
+            --async true
 
   build-frontend:
     runs-on: ubuntu-latest
