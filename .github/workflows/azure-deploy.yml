@@ -14,16 +14,19 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install dependencies (Linux, for native modules)
+        run: npm install --omit=dev
+        working-directory: ./server
+
       - name: Login to Azure
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Zip and deploy backend (source only)
+      - name: Zip and deploy backend
         run: |
           cd server
           zip -r ../backend.zip . \
-            --exclude "node_modules/*" \
             --exclude "*.sqlite" \
             --exclude "uploads/*"
           cd ..
