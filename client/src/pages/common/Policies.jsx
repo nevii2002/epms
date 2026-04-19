@@ -132,7 +132,7 @@ const Policies = () => {
                 {isAdminOrManager && (
                     <button
                         onClick={() => setShowUploadModal(true)}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors sm:w-auto w-full font-medium"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-techznap-600 text-white rounded-lg hover:bg-techznap-700 focus:outline-none focus:ring-2 focus:ring-techznap-500 focus:ring-offset-2 transition-colors sm:w-auto w-full font-medium"
                     >
                         <Upload className="w-4 h-4" />
                         Upload Policy
@@ -171,7 +171,7 @@ const Policies = () => {
                         >
                             <div className="p-6 flex-grow flex flex-col">
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                                    <div className="p-3 bg-techznap-50 text-techznap-600 rounded-lg">
                                         <FileText className="w-6 h-6" />
                                     </div>
                                     {isAdminOrManager && (
@@ -202,7 +202,7 @@ const Policies = () => {
                             <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex gap-3">
                                 <button
                                     onClick={() => openPdfViewer(policy)}
-                                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-transparent rounded-lg hover:bg-indigo-100 transition-colors"
+                                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-techznap-700 bg-techznap-50 border border-transparent rounded-lg hover:bg-techznap-100 transition-colors"
                                 >
                                     <Eye className="w-4 h-4" />
                                     View
@@ -245,7 +245,7 @@ const Policies = () => {
                                 <input
                                     type="text"
                                     id="title"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-techznap-500 focus:border-techznap-500 outline-none transition-colors"
                                     placeholder="e.g., Employee Handbook 2024"
                                     value={uploadTitle}
                                     onChange={(e) => setUploadTitle(e.target.value)}
@@ -261,7 +261,7 @@ const Policies = () => {
                                     <div className="space-y-1 text-center">
                                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
                                         <div className="flex text-sm text-gray-600 justify-center">
-                                            <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 p-1">
+                                            <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-techznap-600 hover:text-techznap-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 p-1">
                                                 <span>Upload a file</span>
                                                 <input
                                                     id="file-upload"
@@ -278,12 +278,12 @@ const Policies = () => {
                                     </div>
                                 </div>
                                 {uploadFile && (
-                                    <div className="mt-2 text-sm text-gray-600 flex items-center justify-between bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100">
-                                        <span className="truncate mr-2 text-indigo-700 font-medium">{uploadFile.name}</span>
+                                    <div className="mt-2 text-sm text-gray-600 flex items-center justify-between bg-techznap-50 px-3 py-2 rounded-lg border border-indigo-100">
+                                        <span className="truncate mr-2 text-techznap-700 font-medium">{uploadFile.name}</span>
                                         <button
                                             type="button"
                                             onClick={() => { setUploadFile(null); }}
-                                            className="text-indigo-400 hover:text-indigo-600"
+                                            className="text-indigo-400 hover:text-techznap-600"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -295,14 +295,14 @@ const Policies = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowUploadModal(false)}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-techznap-500 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={uploading || !uploadFile || !uploadTitle}
-                                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-techznap-600 border border-transparent rounded-lg hover:bg-techznap-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-techznap-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     {uploading ? (
                                         <>

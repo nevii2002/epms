@@ -1,0 +1,88 @@
+Employee performance evaluation system for the company named " Techznap Innovative Solutions."
+
+SEPES System Functionalities: Official Feature List
+1. Administration & Security Module
+
+
+User & Role Management: Create user accounts and assign specific roles (Admin, HR, Manager, Employee, CEO).
+
+
+Granular Permissions: Manage specific CRUD (Create, Read, Update, Delete) rights per user and resource type.
+
+
+Secure Authentication: System login, registration, and password hashing to protect credentials.
+
+
+Audit Logging: Automatic tracking of critical system operations with timestamps for traceability.
+
+
+Data Backup & Recovery: Scheduled automated backups and manual restoration options for the local server database.
+
+2. HR Management Module
+
+
+Employee Profile Management: Centralized creation and maintenance of staff profiles, including contact info, hire dates, and departments.
+
+
+KPI Framework Management: Define, edit, and assign Key Performance Indicators with specific measurement units and weights.
+
+
+Performance Target Setting: Assign measurable, time-bound targets to individual employees to monitor organizational goals.
+
+
+Historical Data Entry: Input past performance metrics (e.g., previous sales or order totals) to enable long-term trend analysis.
+
+
+HR Policy Management: Publish and update company policies accessible to all users for transparency.
+
+3. Evaluation & Scoring Logic
+
+
+Automated Score Calculation: System-generated performance scores based on weighted KPI criteria, actual results, and target values.
+
+
+Employee Self-Evaluation: A digital module for staff to submit ratings and comments on their own performance each cycle.
+
+
+Multi-Period Tracking: Support for monthly, quarterly, and annual evaluation cycles.
+
+4. Monitoring & Analytics Module
+
+
+Performance Dashboards: Real-time interactive visualizations of KPI progress and department-wide performance trends.
+
+
+Underperformer Identification: Tools for Managers and CEOs to filter and flag employees not meeting specific performance thresholds.
+
+
+
+Target Monitoring: A dedicated view to track progress percentages for all active employee targets.
+
+5. Reporting & Communication
+
+
+Automated Report Generation: Generate detailed performance summaries with filters for individuals or teams.
+
+
+Multi-Format Export: Export generated reports into professional PDF or Excel file formats.
+
+
+Real-time Notifications: Automated system alerts for upcoming evaluation deadlines, KPI assignments, and feedback releases.
+
+System Non-Functional Capabilities
+
+Performance: Capable of handling up to 30 concurrent users without performance degradation.
+
+
+Reliability: Guaranteed 95% uptime during standard working hours.
+
+
+Usability: User-friendly interface designed specifically for easy navigation by all staff types.
+
+
+Cross-Platform Support: Deployable across Windows and Linux environments for local desktop access.
+
+
+
+
+1. Administration & SecurityRole-Based Access Control (RBAC): Admins define and manage roles for HR Managers, Managers, and Employees.User Authentication: Secure login, registration, and session management with password hashing.System Audit Logs: Automated tracking of all evaluations, updates, and feedback submissions for compliance.Automated Backups: Daily database backups and manual restoration options to ensure data integrity.2. Core HR & Performance FrameworkEmployee Profile Management: Centralized database for maintaining comprehensive staff records, including promotion and transfer history.KPI Definition & Assignment: HR Managers create KPI templates with specific weights and assign them based on department or role.Performance Target Setting: HR assigns measurable, time-bound targets (e.g., "Sign 3 new customers") to individual employees.Historical Data Entry: Manual input of past performance metrics to facilitate long-term trend analysis.Policy Publication: Centralized repository for company HR policies, manageable by HR and viewable by all staff.3. Dual-Evaluation Module (Employee & Manager)Phase 1: Employee Self-Evaluation:Employees rate their own performance against assigned KPIs using a standardized star/rating scale.Allows employees to provide narrative comments justifying their ratings.Phase 2: Managerial Rating:Managers view the employee's self-evaluation results and provide their own "Official Rating" for the same KPIs.Encourages transparency and identifies discrepancies between self-perception and management expectations.Phase 3: Automated Scoring:The system calculates final performance scores based on the weighted criteria and manager-approved ratings.4. Monitoring & Real-time AnalyticsPerformance Dashboards: Interactive visualizations showing company-wide average scores, top performers, and "Needs Attention" staff.Target Tracking: Real-time progress monitoring of assigned targets for individuals and teams.Underperformer Identification: Data-driven filtering to identify staff not meeting performance thresholds for corrective coaching.5. Reporting & NotificationsAutomated Report Generation: Creation of detailed performance summaries for individuals or departments, exportable to PDF/Excel.Real-time Notifications: Alerts for KPI assignments, self-evaluation deadlines, and feedback releases via dashboard and email.Calculated Logic for the "Perfect" SystemTo support the dual-rating feature effectively, the system uses a comparison logic:$$Achieved\ Score = (Manager\ Rating \times KPI\ Weight)$$The dashboard then visualizes the Evaluation Gap:$$Gap = Manager\ Rating - Self\ Rating$$

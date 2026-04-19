@@ -130,7 +130,7 @@ const Reports = () => {
                     e.evaluator ? e.evaluator.username : 'Self'
                 ]),
                 theme: 'striped',
-                headStyles: { fillColor: [46, 204, 113] },
+                headStyles: { fillColor: [0, 120, 212] },
             });
 
             doc.save(`performance_report_${selectedYear}_${selectedMonth}.pdf`);

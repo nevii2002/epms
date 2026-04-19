@@ -62,7 +62,7 @@ const MainLayout = ({ role = 'user' }) => {
                 <div className="p-6 border-b border-gray-100 flex flex-col items-center">
                     <img src="/logo.png" alt="Techznap Logo" className="h-10 mb-2" />
                     <h1 className="text-lg font-bold text-gray-800 text-center leading-tight">Employee Performance Evaluation System</h1>
-                    <p className="text-[10px] text-blue-500 mt-2 uppercase tracking-wider">{role} Portal</p>
+                    <p className="text-[10px] text-techznap-primary mt-2 uppercase tracking-wider">{role} Portal</p>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -75,12 +75,12 @@ const MainLayout = ({ role = 'user' }) => {
                                 to={link.path}
                                 className={({ isActive }) =>
                                     `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive
-                                        ? 'bg-blue-50 text-blue-600'
+                                        ? 'bg-techznap-50 text-techznap-600'
                                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                     }`
                                 }
                             >
-                                <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-blue-500' : 'text-gray-400'}`} />
+                                <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-techznap-primary' : 'text-gray-400'}`} />
                                 {link.label}
                             </NavLink>
                         );
@@ -108,7 +108,7 @@ const MainLayout = ({ role = 'user' }) => {
                         <button
                             onClick={() => navigate(`/${role}/profile`)}
                             title="Profile Settings"
-                            className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold hover:bg-blue-200 focus:outline-none transition-colors cursor-pointer overflow-hidden shadow-sm"
+                            className="w-8 h-8 rounded-full bg-techznap-100 flex items-center justify-center text-techznap-600 font-bold hover:bg-techznap-200 focus:outline-none transition-colors cursor-pointer overflow-hidden shadow-sm"
                         >
                             {user?.profilePicture ? (
                                 <img src={`${API_BASE}${user.profilePicture}`} alt="Avatar" className="w-full h-full object-cover" />
