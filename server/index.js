@@ -7,6 +7,12 @@ const { User, Evaluation, EvaluationDetail } = require('./models');
 
 dotenv.config();
 
+// Ensure uploads directory exists
+const fs = require('fs');
+['uploads', 'uploads/policies', 'uploads/profiles'].forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -22,16 +28,18 @@ const auditRoutes = require('./routes/auditRoutes');
 const companyDataRoutes = require('./routes/companyDataRoutes');
 const helmet = require('helmet');
 
-app.use(cors());
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'https://polite-pebble-07dcc0400.7.azurestaticapps.net'
+];
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
 app.use(express.json());
-
-// Security Headers (Allow iframe embedding from frontend)
-app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  res.setHeader('Content-Security-Policy', "frame-ancestors 'self' http://localhost:3000");
-  res.setHeader('X-Frame-Options', 'ALLOW-FROM http://localhost:3000');
-  next();
-});
 // Serve uploaded files statically
 app.use(express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -51,10 +59,28 @@ app.get('/', (req, res) => {
   res.send('SEPES API is running');
 });
 
+async function seedAdminIfEmpty() {
+  const bcrypt = require('bcryptjs');
+  const count = await User.count();
+  if (count === 0) {
+    const hash = await bcrypt.hash('Admin@123', 10);
+    await User.create({
+      username: 'Admin',
+      email: 'admin@techznap.com',
+      password: hash,
+      role: 'Admin',
+      status: 'Active',
+      jobCategory: 'Full time'
+    });
+    console.log('Seeded default admin: admin@techznap.com / Admin@123');
+  }
+}
+
 // Database synchronization and Server Start
-sequelize.sync({ alter: false })
-  .then(() => {
+sequelize.sync({ alter: true })
+  .then(async () => {
     console.log('Database connected and synced');
+    await seedAdminIfEmpty();
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
