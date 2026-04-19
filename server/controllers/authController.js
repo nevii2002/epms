@@ -3,28 +3,27 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 
-// --- Nodemailer Setup (Using Ethereal for testing) ---
-let transporter;
+// --- Nodemailer Setup ---
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-async function initMailer() {
-    try {
-        let testAccount = await nodemailer.createTestAccount();
-        transporter = nodemailer.createTransport({
-            host: "smtp.ethereal.email",
-            port: 587,
-            secure: false, // true for 465, false for other ports
-            auth: {
-                user: testAccount.user, // generated ethereal user
-                pass: testAccount.pass, // generated ethereal password
-            },
-        });
-        console.log(`✉️ Mailer initialized (Ethereal test account).`);
-    } catch (err) {
-        console.error("Failed to initialize mailer", err);
-    }
+let transporter = null;
+
+if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+    transporter = nodemailer.createTransport({
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        secure: SMTP_PORT === 465,
+        auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+    console.log(`✉️ Mailer initialized (${SMTP_HOST})`);
+} else {
+    console.warn('⚠️  SMTP not configured. Password reset emails will not be sent.');
 }
-initMailer();
-// -----------------------------------------------------
+// --------------------------------
 
 exports.register = async (req, res) => {
     try {
@@ -101,31 +100,33 @@ exports.forgotPassword = async (req, res) => {
         // Generate a temporary token valid for 15 minutes
         const resetToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'techznap_secret_key', { expiresIn: '15m' });
 
-        // Link points to the frontend React server port 3000
-        const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+        const resetLink = `${FRONTEND_URL}/reset-password/${resetToken}`;
 
-        try {
-            let info = await transporter.sendMail({
-                from: '"Techznap HR System" <hr@techznap.com>',
-                to: email, // The user's email
-                subject: "Password Reset Request",
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-w-md; margin: 0 auto; padding: 20px;">
-                        <h2>Password Reset Request</h2>
-                        <p>Hi ${user.username || 'User'},</p>
-                        <p>We received a request to reset your password for the Techznap Employee Performance Management System.</p>
-                        <p>Click the button below to reset your password. This link is valid for 15 minutes.</p>
-                        <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
-                        <p>If you did not request a password reset, please ignore this email.</p>
-                        <hr>
-                        <p style="color: #6b7280; font-size: 12px;">This is an automated message. Please do not reply.</p>
-                    </div>
-                `,
-            });
-            console.log("Message sent: %s", info.messageId);
-            console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-        } catch (mailError) {
-            console.error("Error sending email:", mailError);
+        if (transporter) {
+            try {
+                await transporter.sendMail({
+                    from: `"Techznap HR System" <${SMTP_USER}>`,
+                    to: email,
+                    subject: "Password Reset Request",
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 20px;">
+                            <h2>Password Reset Request</h2>
+                            <p>Hi ${user.username || 'User'},</p>
+                            <p>We received a request to reset your password for the Techznap Employee Performance Management System.</p>
+                            <p>Click the button below to reset your password. This link is valid for 15 minutes.</p>
+                            <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
+                            <p>If you did not request a password reset, please ignore this email.</p>
+                            <hr>
+                            <p style="color: #6b7280; font-size: 12px;">This is an automated message. Please do not reply.</p>
+                        </div>
+                    `,
+                });
+                console.log(`Password reset email sent to ${email}`);
+            } catch (mailError) {
+                console.error("Error sending email:", mailError);
+            }
+        } else {
+            console.log(`[DEV] Reset link for ${email}: ${resetLink}`);
         }
 
         res.json({ message: 'If an account exists, a reset link has been sent to your email.' });
