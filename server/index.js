@@ -77,25 +77,48 @@ const KPI_SEED = [
   { title: 'Adaptability & Learning', description: 'Speed of mastering new technologies.', category: 'Qualitative', unit: 'Rating', weight: 10 }
 ];
 
+const EMPLOYEE_SEED = [
+  { username: 'Admin',         email: 'admin@techznap.com',   password: 'Admin@123',    role: 'Admin',    position: 'System Administrator',   department: 'IT',          jobCategory: 'Full time', basicSalary: 5000, startDate: '2022-01-10' },
+  { username: 'Sarah Williams',email: 'sarah@techznap.com',   password: 'Sarah@123',    role: 'HR',       position: 'HR Manager',              department: 'HR',          jobCategory: 'Full time', basicSalary: 4500, startDate: '2022-03-15', mobileNumber: '+94 71 234 5678', jobDescription: 'Manages HR operations, recruitment and performance reviews.', responsibilities: 'Recruitment, Payroll, Employee Relations' },
+  { username: 'James Cooper',  email: 'james@techznap.com',   password: 'James@123',    role: 'Manager',  position: 'Operations Manager',      department: 'Operations',  jobCategory: 'Full time', basicSalary: 5500, startDate: '2021-06-01', mobileNumber: '+94 77 345 6789', jobDescription: 'Oversees daily operations and team performance.', responsibilities: 'Team Management, KPI Tracking, Client Relations' },
+  { username: 'Amara Perera',  email: 'amara@techznap.com',   password: 'Amara@123',    role: 'Employee', position: 'Software Engineer',       department: 'IT',          jobCategory: 'Full time', basicSalary: 3800, startDate: '2023-02-20', mobileNumber: '+94 76 456 7890', jobDescription: 'Develops and maintains software solutions.', responsibilities: 'Frontend Development, Bug Fixes, Code Review' },
+  { username: 'Nimal Fernando', email: 'nimal@techznap.com',  password: 'Nimal@123',    role: 'Employee', position: 'Sales Executive',         department: 'Sales',       jobCategory: 'Full time', basicSalary: 3200, startDate: '2023-05-10', mobileNumber: '+94 70 567 8901', jobDescription: 'Handles client acquisition and order management.', responsibilities: 'Lead Generation, Client Meetings, Order Processing' },
+  { username: 'Lisa Mendis',   email: 'lisa@techznap.com',    password: 'Lisa@123',     role: 'Employee', position: 'Marketing Specialist',    department: 'Marketing',   jobCategory: 'Full time', basicSalary: 3400, startDate: '2023-07-01', mobileNumber: '+94 75 678 9012', jobDescription: 'Plans and executes marketing campaigns.', responsibilities: 'Social Media, Content Creation, Campaign Analytics' },
+  { username: 'David Silva',   email: 'david@techznap.com',   password: 'David@123',    role: 'Employee', position: 'Customer Support Lead',   department: 'Support',     jobCategory: 'Full time', basicSalary: 3000, startDate: '2022-11-15', mobileNumber: '+94 72 789 0123', jobDescription: 'Leads the customer support team and resolves escalations.', responsibilities: 'Ticket Management, Customer Satisfaction, Team Training' },
+  { username: 'Emma Jayasinghe',email: 'emma@techznap.com',   password: 'Emma@123',     role: 'Employee', position: 'Finance Analyst',         department: 'Finance',     jobCategory: 'Full time', basicSalary: 4000, startDate: '2022-08-22', mobileNumber: '+94 78 890 1234', jobDescription: 'Analyses financial data and prepares reports.', responsibilities: 'Financial Reporting, Budget Analysis, Compliance' },
+  { username: 'Kamal Bandara', email: 'kamal@techznap.com',   password: 'Kamal@123',    role: 'Employee', position: 'Delivery Coordinator',    department: 'Operations',  jobCategory: 'Hourly',    basicSalary: 2500, startDate: '2023-09-05', mobileNumber: '+94 71 901 2345', jobDescription: 'Coordinates deliveries and manages logistics.', responsibilities: 'Delivery Scheduling, Driver Coordination, Route Planning' },
+  { username: 'CEO',           email: 'ceo@techznap.com',     password: 'Ceo@123',      role: 'CEO',      position: 'Chief Executive Officer', department: 'Executive',   jobCategory: 'Full time', basicSalary: 10000, startDate: '2020-01-01', mobileNumber: '+94 77 000 0001', jobDescription: 'Leads the company strategy and overall operations.', responsibilities: 'Strategic Planning, Stakeholder Management, Business Growth' },
+];
+
 async function seedDatabase() {
   const bcrypt = require('bcryptjs');
 
-  // Seed admin user if no users exist
-  const userCount = await User.count();
-  if (userCount === 0) {
-    const hash = await bcrypt.hash('Admin@123', 10);
-    await User.create({
-      username: 'Admin',
-      email: 'admin@techznap.com',
-      password: hash,
-      role: 'Admin',
-      status: 'Active',
-      jobCategory: 'Full time'
+  // Seed users (idempotent - uses findOrCreate by email)
+  let seededCount = 0;
+  for (const emp of EMPLOYEE_SEED) {
+    const hash = await bcrypt.hash(emp.password, 10);
+    const [, created] = await User.findOrCreate({
+      where: { email: emp.email },
+      defaults: {
+        username: emp.username,
+        password: hash,
+        role: emp.role,
+        status: 'Active',
+        jobCategory: emp.jobCategory,
+        position: emp.position,
+        department: emp.department,
+        basicSalary: emp.basicSalary,
+        mobileNumber: emp.mobileNumber || null,
+        jobDescription: emp.jobDescription || '',
+        responsibilities: emp.responsibilities || '',
+        startDate: emp.startDate
+      }
     });
-    console.log('Seeded default admin: admin@techznap.com / Admin@123');
+    if (created) seededCount++;
   }
+  if (seededCount > 0) console.log(`Seeded ${seededCount} users`);
 
-  // Seed KPIs (idempotent - uses findOrCreate)
+  // Seed KPIs (idempotent)
   const kpiCount = await KPI.count();
   if (kpiCount === 0) {
     for (const kpi of KPI_SEED) {
