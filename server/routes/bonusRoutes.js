@@ -6,8 +6,8 @@ const { verifyToken, isAdmin, isAdminOrManager } = require('../middleware/authMi
 // Admin or Manager can award bonuses
 router.post('/', verifyToken, isAdminOrManager, bonusController.createBonus);
 
-// Get all bonuses (Admin/HR view)
-router.get('/', verifyToken, isAdmin, bonusController.getAllBonuses);
+// Get all bonuses (Admin/Manager/HR view)
+router.get('/', verifyToken, isAdminOrManager, bonusController.getAllBonuses);
 
 // Get bonuses for a specific employee
 // Users can see their own, Managers/Admins can see others
