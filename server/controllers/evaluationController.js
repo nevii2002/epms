@@ -150,14 +150,17 @@ exports.getDashboardStats = async (req, res) => {
                     const actual = log.actualValue || 0;
                     const weight = (log.KPI && log.KPI.weight > 0) ? log.KPI.weight : 0;
 
-                    const score = (actual / target) * 100;
+                    const score = Math.min((actual / target) * 100, 100);
                     totalWeightedScore += (score * weight);
                     totalWeights += weight;
                 });
 
                 // If weighting is not configured properly, default to a simple average
                 quantScore = totalWeights > 0 ? (totalWeightedScore / totalWeights) :
-                    (quantLogs.reduce((acc, log) => acc + (((log.actualValue || 0) / ((log.KPI && log.KPI.targetValue > 0) ? log.KPI.targetValue : 1)) * 100), 0) / quantLogs.length);
+                    (quantLogs.reduce((acc, log) => {
+                        const target = (log.KPI && log.KPI.targetValue > 0) ? log.KPI.targetValue : 1;
+                        return acc + Math.min((((log.actualValue || 0) / target) * 100), 100);
+                    }, 0) / quantLogs.length);
             }
 
             // Composite Score logic
@@ -167,13 +170,14 @@ exports.getDashboardStats = async (req, res) => {
             else if (quantScore > 0) compositeScore = quantScore;
 
             if (compositeScore > 0) {
+                const cappedCompositeScore = Math.min(compositeScore, 100);
                 allScores.push({
                     id: emp.id,
                     username: emp.username,
                     profilePicture: emp.profilePicture,
                     position: emp.position,
-                    compositeScore,
-                    avgRating: (compositeScore / 20).toFixed(1)
+                    compositeScore: cappedCompositeScore,
+                    avgRating: (cappedCompositeScore / 20).toFixed(1)
                 });
             }
         }

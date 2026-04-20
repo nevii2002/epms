@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { Target, PieChart, TrendingUp, Award, Save } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
+import { buildCompanyMetricMap, getCompanyMetricValue } from '../../utils/companyMetricDefaults';
 
 const MyKPIs = () => {
     const { user } = useAuth();
@@ -36,8 +37,22 @@ const MyKPIs = () => {
         const fetchLogs = async () => {
             try {
                 const period = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-                const logsRes = await api.get(`/quantitative/${user.id}?period=${period}`);
+                const [logsRes, companyLogsRes] = await Promise.all([
+                    api.get(`/quantitative/${user.id}?period=${period}`),
+                    api.get(`/company-data/logs?period=${period}`)
+                ]);
+                const companyMetricMap = buildCompanyMetricMap(companyLogsRes.data);
                 const newLogs = {};
+                kpis.forEach(kpi => {
+                    const companyValue = getCompanyMetricValue(companyMetricMap, kpi.title);
+                    if (companyValue !== undefined) {
+                        newLogs[kpi.id] = {
+                            actualValue: companyValue,
+                            updatedAt: null,
+                            source: 'Company Data'
+                        };
+                    }
+                });
                 logsRes.data.forEach(log => {
                     newLogs[log.kpiId] = {
                         actualValue: log.actualValue,

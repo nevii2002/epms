@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, DollarSign } from 'lucide-react';
 import api from '../../api/axios';
+import { buildCompanyMetricMap, getCompanyMetricValue } from '../../utils/companyMetricDefaults';
 
 const BonusCalculation = () => {
     const [selectedEmployee, setSelectedEmployee] = useState('');
@@ -30,13 +31,17 @@ const BonusCalculation = () => {
             setIsLoading(true);
             try {
                 // Fetch Employee's KPIs
-                const profileRes = await api.get(`/staff/${selectedEmployee}`);
-                const assignedKPIs = profileRes.data.assignedKPIs || [];
+                const kpiRes = await api.get(`/staff/${selectedEmployee}/kpis`);
+                const assignedKPIs = kpiRes.data || [];
                 const quantKPIs = assignedKPIs.filter(k => k.category === 'Quantitative');
 
                 // Fetch their logged Quantitative metrics for this period
                 const period = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-                const logsRes = await api.get(`/quantitative/${selectedEmployee}?period=${period}`);
+                const [logsRes, companyLogsRes] = await Promise.all([
+                    api.get(`/quantitative/${selectedEmployee}?period=${period}`),
+                    api.get(`/company-data/logs?period=${period}`)
+                ]);
+                const companyMetricMap = buildCompanyMetricMap(companyLogsRes.data);
 
                 const logsMap = {};
                 logsRes.data.forEach(l => {
@@ -51,7 +56,9 @@ const BonusCalculation = () => {
                         target: kpi.targetValue,
                         weight: kpi.EmployeeKPI?.customWeight || kpi.weight,
                         bonusAt100: kpi.EmployeeKPI?.customBonus || 20000,
-                        actual: logsMap[kpi.id] !== undefined ? logsMap[kpi.id] : ''
+                        actual: logsMap[kpi.id] !== undefined
+                            ? logsMap[kpi.id]
+                            : getCompanyMetricValue(companyMetricMap, kpi.title) ?? ''
                     };
                 });
 

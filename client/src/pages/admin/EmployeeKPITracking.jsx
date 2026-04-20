@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, BarChart2 } from 'lucide-react';
 import api from '../../api/axios';
+import { buildCompanyMetricMap, getCompanyMetricValue } from '../../utils/companyMetricDefaults';
 
 const EmployeeKPITracking = () => {
     const [employees, setEmployees] = useState([]);
@@ -31,8 +32,18 @@ const EmployeeKPITracking = () => {
                 setTrackingKpis(kpiRes.data || []);
 
                 const period = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-                const logsRes = await api.get(`/quantitative/${selectedEmployee}?period=${period}`);
+                const [logsRes, companyLogsRes] = await Promise.all([
+                    api.get(`/quantitative/${selectedEmployee}?period=${period}`),
+                    api.get(`/company-data/logs?period=${period}`)
+                ]);
+                const companyMetricMap = buildCompanyMetricMap(companyLogsRes.data);
                 const newLogs = {};
+                (kpiRes.data || []).forEach(kpi => {
+                    const companyValue = getCompanyMetricValue(companyMetricMap, kpi.title);
+                    if (companyValue !== undefined) {
+                        newLogs[kpi.id] = companyValue;
+                    }
+                });
                 logsRes.data.forEach(log => newLogs[log.kpiId] = log.actualValue);
                 setLogs(newLogs);
             } catch (err) { console.error('Failed to load tracking data', err); }

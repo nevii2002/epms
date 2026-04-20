@@ -15,6 +15,9 @@ const SelfEvaluation = () => {
     const [globalComment, setGlobalComment] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [selectedYear, setSelectedYear] = useState(2026);
+    const [selectedMonth, setSelectedMonth] = useState(4);
+    const selectedPeriod = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
 
     const handleRatingChange = (kpiId, rating) => {
         setRatings(prev => ({
@@ -47,6 +50,7 @@ const SelfEvaluation = () => {
                 <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md w-full border-t-4 border-blue-500">
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">Evaluation Submitted</h2>
                     <p className="text-gray-600 mb-4">Your self-evaluation has been successfully recorded.</p>
+                    <p className="text-sm text-gray-500 mb-4">Period: {selectedPeriod}</p>
 
                     <div className="bg-blue-50 rounded-lg p-4 mb-6">
                         <p className="text-sm text-blue-600 font-semibold uppercase tracking-wider">Your Final Mark</p>
@@ -67,9 +71,31 @@ const SelfEvaluation = () => {
                         <h2 className="text-xl font-bold text-gray-800">Employee Self-Evaluation Form</h2>
                         <p className="mt-1 text-sm text-gray-500">Rate your performance on the displayed KPIs.</p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-xs text-gray-400 uppercase font-bold">Current Score</p>
-                        <p className="text-2xl font-bold text-indigo-600">{currentScore}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <select
+                            className="p-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium"
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                        >
+                            <option value={2025}>2025</option>
+                            <option value={2026}>2026</option>
+                            <option value={2027}>2027</option>
+                        </select>
+                        <select
+                            className="p-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium"
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                        >
+                            {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i + 1} value={i + 1}>
+                                    {new Date(2025, i, 1).toLocaleString('default', { month: 'short' })}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="text-right">
+                            <p className="text-xs text-gray-400 uppercase font-bold">Current Score</p>
+                            <p className="text-2xl font-bold text-indigo-600">{currentScore}</p>
+                        </div>
                     </div>
                 </div>
 

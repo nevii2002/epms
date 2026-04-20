@@ -7,6 +7,9 @@ const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').r
 const Dashboard = ({ role }) => {
     const [stats, setStats] = useState({ totalStaff: 0, totalKPIs: 0, avgPerformance: 0 });
     const [loading, setLoading] = useState(true);
+    const employeeOfTheMonthScore = stats.employeeOfTheMonth
+        ? Math.min(parseFloat(stats.employeeOfTheMonth.compositeScore) || 0, 100).toFixed(1)
+        : '0.0';
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -126,9 +129,9 @@ const Dashboard = ({ role }) => {
                         </div>
                     </div>
                     <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 text-center text-white border border-white/40 shadow-inner relative z-10 mt-4 sm:mt-0 w-full sm:w-48">
-                        <div className="text-xs font-semibold uppercase tracking-wider text-yellow-100 mb-1">Average Rating</div>
+                        <div className="text-xs font-semibold uppercase tracking-wider text-yellow-100 mb-1">Performance Score</div>
                         <div className="text-3xl font-bold flex items-center justify-center drop-shadow-md">
-                            {stats.employeeOfTheMonth.avgRating} <span className="text-base font-medium ml-1 text-yellow-100 mt-1">/ 5.0</span>
+                            {employeeOfTheMonthScore} <span className="text-base font-medium ml-1 text-yellow-100 mt-1">/ 100</span>
                         </div>
                     </div>
                 </div>
@@ -155,7 +158,7 @@ const Dashboard = ({ role }) => {
                                     <h5 className="font-semibold text-gray-900">{emp.username}</h5>
                                     <p className="text-xs text-red-600 font-medium pb-1">{emp.position || 'Employee'}</p>
                                     <span className="px-2 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold">
-                                        Score: {emp.compositeScore.toFixed(1)}% | {emp.avgRating}/5
+                                        Score: {Math.min(emp.compositeScore, 100).toFixed(1)} / 100
                                     </span>
                                 </div>
                             </div>
