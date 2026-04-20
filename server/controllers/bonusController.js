@@ -34,6 +34,14 @@ exports.createBonus = async (req, res) => {
 exports.getBonusesByEmployee = async (req, res) => {
     try {
         const { employeeId } = req.params;
+        const requesterId = req.user.userId;
+        const requesterRole = req.user.role;
+        const canView = ['Admin', 'CEO', 'Manager'].includes(requesterRole) || Number(employeeId) === Number(requesterId);
+
+        if (!canView) {
+            return res.status(403).json({ message: 'You can only view your own bonus records.' });
+        }
+
         const bonuses = await Bonus.findAll({
             where: { employeeId },
             order: [['dateGiven', 'DESC']]

@@ -3,9 +3,15 @@ const { QuantitativeLog, KPI, User } = require('../models');
 exports.upsertLog = async (req, res) => {
     try {
         const { employeeId, kpiId, period, actualValue } = req.body;
+        const requesterRole = req.user.role;
+        const requesterId = req.user.userId;
 
         if (!employeeId || !kpiId || !period || actualValue === undefined) {
             return res.status(400).json({ message: 'Missing required fields' });
+        }
+        const canWrite = ['Admin', 'CEO', 'Manager'].includes(requesterRole) || Number(employeeId) === Number(requesterId);
+        if (!canWrite) {
+            return res.status(403).json({ message: 'You can only log KPI values for your own account.' });
         }
 
         // Check if log exists for this period
@@ -36,6 +42,13 @@ exports.getLogs = async (req, res) => {
     try {
         const { employeeId } = req.params;
         const { period } = req.query; // optional filter
+        const requesterRole = req.user.role;
+        const requesterId = req.user.userId;
+        const canView = ['Admin', 'CEO', 'Manager'].includes(requesterRole) || Number(employeeId) === Number(requesterId);
+
+        if (!canView) {
+            return res.status(403).json({ message: 'You can only view your own KPI logs.' });
+        }
 
         let whereClause = { employeeId };
         if (period) {

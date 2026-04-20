@@ -106,6 +106,15 @@ exports.getEvaluationById = async (req, res) => {
         });
 
         if (!evaluation) return res.status(404).json({ message: 'Evaluation not found' });
+        const requesterRole = req.user.role;
+        const requesterId = req.user.userId;
+        const canView = ['Admin', 'CEO', 'Manager'].includes(requesterRole)
+            || evaluation.employeeId === requesterId
+            || evaluation.evaluatorId === requesterId;
+
+        if (!canView) {
+            return res.status(403).json({ message: 'You are not allowed to view this evaluation.' });
+        }
 
         res.json(evaluation);
     } catch (error) {
