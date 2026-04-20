@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
 import StarRating from '../../components/StarRating';
+import { evaluationCriteria } from '../../constants/evaluationCriteria';
 
 const SelfEvaluation = () => {
     // Hardcoded KPIs to match the specific requirement
-    const specificKPIs = [
-        { id: 1, title: "Achieving Project Deadlines", description: "Consistently meets project deadlines and delivers tasks on time, demonstrating strong time management skills." },
-        { id: 2, title: "Quality of Work Product", description: "Produces high-quality work that is accurate, thorough, and meets expectations, contributing to overall project success." },
-        { id: 3, title: "Communication & Collaboration", description: "Effectively communicates ideas and information to team members and stakeholders, fostering a collaborative and productive work environment." },
-        { id: 4, title: "Problem-Solving & Innovation", description: "Identifies challenges proactively, analyzes complex situations, and develops creative, effective solutions, driving continuous improvement." },
-        { id: 5, title: "Adaptability & Learning", description: "Adapts quickly to new technologies, processes, and changing priorities, demonstrating a strong willingness to learn and grow professionally." }
-    ];
+    const specificKPIs = evaluationCriteria.map((criterion, index) => ({ id: index + 1, ...criterion }));
 
     const [ratings, setRatings] = useState({});
     const [globalComment, setGlobalComment] = useState('');

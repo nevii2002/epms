@@ -70,11 +70,14 @@ const KPI_SEED = [
   { title: 'Average Response Time', description: 'Speed of communication with stakeholders.', category: 'Quantitative', unit: 'Hours', weight: 5, targetValue: 2 },
   { title: 'Customer Satisfaction Score', description: 'Direct ratings from clients (x/5).', category: 'Quantitative', unit: 'Score (1-5)', weight: 10, targetValue: 4.5 },
   { title: 'Repeat Customer Rate', description: 'Frequency of returning clients.', category: 'Quantitative', unit: 'Percentage', weight: 10, targetValue: 30 },
-  { title: 'Quality of Work Product', description: 'Subjective rating of accuracy and thoroughness.', category: 'Qualitative', unit: 'Rating', weight: 10 },
+  { title: 'Achieving Project Deadlines', description: 'Consistently meets project deadlines and delivers tasks on time, demonstrating strong time management skills.', category: 'Qualitative', unit: 'Rating', weight: 10 },
+  { title: 'Quality of Work Product', description: 'Produces high-quality work that is accurate, thorough, and meets expectations, contributing to overall project success.', category: 'Qualitative', unit: 'Rating', weight: 10 },
+  { title: 'Communication & Collaboration', description: 'Effectively communicates ideas and information to team members and stakeholders, fostering a collaborative and productive work environment.', category: 'Qualitative', unit: 'Rating', weight: 10 },
+  { title: 'Problem-Solving & Innovation', description: 'Identifies challenges proactively, analyzes complex situations, and develops creative, effective solutions, driving continuous improvement.', category: 'Qualitative', unit: 'Rating', weight: 10 },
   { title: 'Dispute Rate', description: 'Tasks resulting in formal complaints.', category: 'Quantitative', unit: 'Percentage', weight: 5, targetValue: 1 },
   { title: 'Disputes Converted to Satisfied', description: 'Problem-solving skills in conflicts.', category: 'Quantitative', unit: 'Count', weight: 5, targetValue: 5 },
   { title: 'Tips or Recognition', description: 'External positive feedback or rewards.', category: 'Quantitative', unit: 'Currency/Count', weight: 5, targetValue: 100 },
-  { title: 'Adaptability & Learning', description: 'Speed of mastering new technologies.', category: 'Qualitative', unit: 'Rating', weight: 10 }
+  { title: 'Adaptability & Learning', description: 'Adapts quickly to new technologies, processes, and changing priorities, demonstrating a strong willingness to learn and grow professionally.', category: 'Qualitative', unit: 'Rating', weight: 10 }
 ];
 
 const EMPLOYEE_SEED = [
@@ -119,13 +122,12 @@ async function seedDatabase() {
   if (seededCount > 0) console.log(`Seeded ${seededCount} users`);
 
   // Seed KPIs (idempotent)
-  const kpiCount = await KPI.count();
-  if (kpiCount === 0) {
-    for (const kpi of KPI_SEED) {
-      await KPI.findOrCreate({ where: { title: kpi.title }, defaults: kpi });
-    }
-    console.log(`Seeded ${KPI_SEED.length} KPIs`);
+  let seededKpiCount = 0;
+  for (const kpi of KPI_SEED) {
+    const [, created] = await KPI.findOrCreate({ where: { title: kpi.title }, defaults: kpi });
+    if (created) seededKpiCount++;
   }
+  if (seededKpiCount > 0) console.log(`Seeded ${seededKpiCount} KPIs`);
 }
 
 // Database synchronization and Server Start

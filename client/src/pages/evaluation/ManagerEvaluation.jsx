@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import StarRating from '../../components/StarRating';
 import api from '../../api/axios';
+import { evaluationCriteria } from '../../constants/evaluationCriteria';
 
 const ManagerEvaluation = () => {
     const [employees, setEmployees] = useState([]);
@@ -8,6 +9,7 @@ const ManagerEvaluation = () => {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
     const [kpis, setKpis] = useState([]);
+    const [missingCriteria, setMissingCriteria] = useState([]);
     const [ratings, setRatings] = useState({});
     const [globalComment, setGlobalComment] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -22,9 +24,19 @@ const ManagerEvaluation = () => {
                 const staffRes = await api.get('/staff');
                 setEmployees(staffRes.data.filter(u => u.role === 'Employee'));
 
-                // Fetch Qualitative KPIs
+                // Fetch Qualitative KPIs and keep the form aligned with the standard 360 criteria.
                 const kpiRes = await api.get('/kpis');
-                setKpis(kpiRes.data.filter(k => k.category === 'Qualitative'));
+                const qualitativeKpis = kpiRes.data.filter(k => k.category === 'Qualitative');
+                const normalizedKpis = evaluationCriteria
+                    .map((criterion) => {
+                        const savedKpi = qualitativeKpis.find(k => k.title === criterion.title);
+                        return savedKpi ? { ...savedKpi, description: criterion.description } : null;
+                    })
+                    .filter(Boolean);
+                setKpis(normalizedKpis);
+                setMissingCriteria(evaluationCriteria
+                    .filter((criterion) => !qualitativeKpis.some(k => k.title === criterion.title))
+                    .map((criterion) => criterion.title));
             } catch (err) {
                 console.error('Failed to init evaluation data', err);
                 setErrorMessage('Failed to load necessary data.');
@@ -94,6 +106,11 @@ const ManagerEvaluation = () => {
 
                     {successMessage && <div className="mt-4 bg-green-100 text-green-700 p-3 rounded">{successMessage}</div>}
                     {errorMessage && <div className="mt-4 bg-red-100 text-red-700 p-3 rounded">{errorMessage}</div>}
+                    {missingCriteria.length > 0 && (
+                        <div className="mt-4 bg-amber-100 text-amber-800 p-3 rounded text-sm">
+                            Missing KPI Framework items: {missingCriteria.join(', ')}. They will appear after the backend seed runs.
+                        </div>
+                    )}
 
                     {/* Selectors */}
                     <div className="flex flex-wrap gap-4 mt-4">
@@ -134,7 +151,7 @@ const ManagerEvaluation = () => {
 
                 <div className="p-6 space-y-6">
                     {kpis.length === 0 ? (
-                        <p className="text-gray-500 text-center">No Quantitative KPIs found. Please add them in KPI Framework.</p>
+                        <p className="text-gray-500 text-center">No qualitative evaluation criteria found. Please add them in KPI Framework.</p>
                     ) : (
                         kpis.map((kpi) => (
                             <div key={kpi.id} className="border border-gray-200 rounded-lg p-4">
