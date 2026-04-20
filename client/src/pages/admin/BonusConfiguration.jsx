@@ -2,18 +2,42 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { Edit, Save } from 'lucide-react';
 
+const emptyRow = () => ({
+    id: `temp-${Math.random()}`,
+    kpiId: '',
+    project: '',
+    kpi: 'Quantitative',
+    target: '',
+    weight: '',
+    bonusAt100: '',
+    unit: 'Currency'
+});
+
 const BonusConfiguration = () => {
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [employees, setEmployees] = useState([]);
     const [rows, setRows] = useState([]);
+    const [allKpis, setAllKpis] = useState([]);
+    const [existingAssignments, setExistingAssignments] = useState([]);
+    const [isSaving, setIsSaving] = useState(false);
 
     const fetchEmployees = async () => {
         try {
             const response = await api.get('/staff');
-            setEmployees(response.data);
-            if (response.data.length > 0) {
-                setSelectedEmployee(response.data[0].id);
+            const staff = response.data.filter(user => user.role === 'Employee');
+            setEmployees(staff);
+            if (staff.length > 0) {
+                setSelectedEmployee(staff[0].id);
             }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchKpis = async () => {
+        try {
+            const response = await api.get('/kpis');
+            setAllKpis(response.data || []);
         } catch (error) {
             console.error(error);
         }
@@ -22,37 +46,32 @@ const BonusConfiguration = () => {
     const fetchEmployeeData = async (empId) => {
         try {
             const res = await api.get(`/staff/${empId}/kpis`);
+            const assigned = res.data || [];
+            setExistingAssignments(assigned);
 
-            if (res.data && res.data.length > 0) {
-                const mappedRows = res.data.map(k => ({
-                    id: k.id,
-                    project: k.title,
-                    kpi: k.category,
-                    target: k.targetValue,
-                    weight: k.EmployeeKPI?.customWeight || '',
-                    bonusAt100: k.EmployeeKPI?.customBonus || ''
+            const bonusRows = assigned
+                .filter(kpi => kpi.type === 'BONUS' || Number(kpi.EmployeeKPI?.customBonus || 0) > 0)
+                .map(kpi => ({
+                    id: kpi.id,
+                    kpiId: kpi.id,
+                    project: kpi.title,
+                    kpi: kpi.category,
+                    target: kpi.targetValue ?? '',
+                    weight: kpi.EmployeeKPI?.customWeight ?? '',
+                    bonusAt100: kpi.EmployeeKPI?.customBonus ?? '',
+                    unit: kpi.unit || ''
                 }));
-                // Pad with fewer empty rows to keep it clean
-                while (mappedRows.length < 5) {
-                    mappedRows.push({ id: `temp-${Math.random()}`, project: '', kpi: '', target: '', weight: '', bonusAt100: '' });
-                }
-                setRows(mappedRows);
-            } else {
-                setRows([
-                    { id: '1', project: 'YouTube ad sense revenue', kpi: 'Revenue', target: '1000', weight: '20', bonusAt100: '20000' },
-                    { id: '2', project: 'YouTube collab revenue', kpi: 'Revenue', target: '500', weight: '30', bonusAt100: '30000' },
-                    { id: '3', project: 'Fiverr - Graphic Design', kpi: 'Task', target: '10', weight: '25', bonusAt100: '25000' },
-                    { id: '4', project: 'Fiverr - Video Editing', kpi: 'Task', target: '5', weight: '25', bonusAt100: '25000' },
-                    { id: '5', project: '', kpi: '', target: '', weight: '', bonusAt100: '' }
-                ]);
-            }
-        } catch (e) {
-            console.error(e);
+
+            while (bonusRows.length < 5) bonusRows.push(emptyRow());
+            setRows(bonusRows);
+        } catch (error) {
+            console.error(error);
         }
     };
 
     useEffect(() => {
         Promise.resolve().then(fetchEmployees);
+        Promise.resolve().then(fetchKpis);
     }, []);
 
     useEffect(() => {
@@ -62,36 +81,76 @@ const BonusConfiguration = () => {
     }, [selectedEmployee]);
 
     const handleInputChange = (id, field, value) => {
-        setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+        setRows(prev => prev.map(row => row.id === id ? { ...row, [field]: value } : row));
     };
 
     const handleSave = async () => {
-        if (!selectedEmployee) return alert("Please select an employee first.");
+        if (!selectedEmployee) return alert('Please select an employee first.');
 
+        const rowsToSave = rows.filter(row => row.project && Number(row.bonusAt100 || 0) > 0);
+        if (rowsToSave.length === 0) return alert('Please add at least one bonus target with a bonus amount.');
+
+        for (const row of rowsToSave) {
+            const weight = Number(row.weight);
+            const bonusAt100 = Number(row.bonusAt100);
+            const target = Number(row.target);
+            if (!Number.isFinite(weight) || weight < 0 || weight > 100) {
+                return alert(`Weight must be between 0 and 100 for ${row.project}.`);
+            }
+            if (!Number.isFinite(bonusAt100) || bonusAt100 <= 0) {
+                return alert(`Bonus at 100% must be greater than 0 for ${row.project}.`);
+            }
+            if (!Number.isFinite(target) || target <= 0) {
+                return alert(`Target must be greater than 0 for ${row.project}.`);
+            }
+        }
+
+        setIsSaving(true);
         try {
-            // Filter only rows that have meaningful data (simulate creating new KPIs if they have an ID)
-            // Real implementation would require a backend endpoint to batch create/update KPIs.
-            // For now, we only save rows that can map to a structure valid for the 'assign-kpis' endpoint logic if we assumed ids were real.
-            // But since '1', '2' etc. are dummies, this will fail on backend if we send them.
-            // So we mock the success for the user to proceed with the flow.
+            const savedBonusAssignments = [];
 
-            // Logic if backend endpoints existed:
-            /*
-            const validAssignments = rows.filter(r => r.project).map(r => ({
-                kpiId: r.id, // Problem: r.id needs to be real DB ID
-                weight: parseFloat(r.weight) || 0,
-                customBonus: parseFloat(r.bonusAt100) || 0
-            }));
-            await axios.post(..., { assignments: validAssignments });
-            */
+            for (const row of rowsToSave) {
+                let kpiId = row.kpiId;
+                if (!kpiId) {
+                    const created = await api.post('/kpis', {
+                        title: row.project,
+                        description: `Bonus target for ${row.project}`,
+                        category: row.kpi || 'Quantitative',
+                        type: 'BONUS',
+                        unit: row.unit || 'Currency',
+                        weight: Number(row.weight) || 0,
+                        targetValue: Number(row.target) || 0
+                    });
+                    kpiId = created.data.id;
+                }
 
-            // Mock Success
-            alert("Configuration saved successfully for " + employees.find(e => e.id == selectedEmployee)?.username);
-            console.log("Saved rows:", rows);
+                savedBonusAssignments.push({
+                    kpiId: Number(kpiId),
+                    weight: Number(row.weight) || 0,
+                    customBonus: Number(row.bonusAt100) || 0
+                });
+            }
 
+            const preservedAssignments = existingAssignments
+                .filter(kpi => kpi.type !== 'BONUS' && Number(kpi.EmployeeKPI?.customBonus || 0) === 0)
+                .map(kpi => ({
+                    kpiId: kpi.id,
+                    weight: Number(kpi.EmployeeKPI?.customWeight || kpi.weight || 0),
+                    customBonus: Number(kpi.EmployeeKPI?.customBonus || 0)
+                }));
+
+            await api.post(`/staff/${selectedEmployee}/kpis`, {
+                assignments: [...preservedAssignments, ...savedBonusAssignments]
+            });
+
+            alert(`Configuration saved successfully for ${employees.find(e => e.id == selectedEmployee)?.username}`);
+            await fetchKpis();
+            await fetchEmployeeData(selectedEmployee);
         } catch (error) {
             console.error(error);
-            alert("Failed to save configuration.");
+            alert(error.response?.data?.message || 'Failed to save configuration.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -114,6 +173,7 @@ const BonusConfiguration = () => {
             <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                     <h2 className="text-xl font-bold text-gray-800">Bonus Structure</h2>
+                    <p className="text-sm text-gray-500 mt-1">Saved targets will appear in the employee portal under My Bonuses.</p>
                 </div>
 
                 <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-white border-b border-gray-100 text-sm font-bold text-gray-900 text-center items-center">
@@ -128,14 +188,25 @@ const BonusConfiguration = () => {
                     {rows.map((row) => (
                         <div key={row.id} className="grid grid-cols-12 gap-4 items-center">
                             <div className="col-span-3 flex items-center space-x-2">
-                                <div className="p-1.5 bg-blue-500 rounded text-white cursor-pointer hover:bg-blue-600">
+                                <div className="p-1.5 bg-blue-500 rounded text-white">
                                     <Edit size={14} />
                                 </div>
                                 <input
                                     type="text"
                                     value={row.project}
                                     placeholder="Project Name"
-                                    onChange={(e) => handleInputChange(row.id, 'project', e.target.value)}
+                                    list="bonus-kpi-options"
+                                    onChange={(e) => {
+                                        const matched = allKpis.find(kpi => kpi.title === e.target.value && kpi.type === 'BONUS');
+                                        setRows(prev => prev.map(item => item.id === row.id ? {
+                                            ...item,
+                                            project: e.target.value,
+                                            kpiId: matched?.id || '',
+                                            kpi: matched?.category || item.kpi,
+                                            target: matched?.targetValue ?? item.target,
+                                            unit: matched?.unit || item.unit
+                                        } : item));
+                                    }}
                                     className="w-full text-sm text-gray-800 bg-transparent border-none focus:ring-0 placeholder-gray-300"
                                 />
                             </div>
@@ -151,17 +222,18 @@ const BonusConfiguration = () => {
 
                             <div className="col-span-2">
                                 <input
-                                    type="text"
+                                    type="number"
                                     value={row.target}
                                     onChange={(e) => handleInputChange(row.id, 'target', e.target.value)}
                                     className="w-full h-10 px-3 bg-blue-50 border border-blue-100 rounded-full text-sm text-center text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 />
                             </div>
 
-                            {/* Weight Input */}
                             <div className="col-span-2">
                                 <input
                                     type="number"
+                                    min="0"
+                                    max="100"
                                     value={row.weight}
                                     onChange={(e) => handleInputChange(row.id, 'weight', e.target.value)}
                                     className="w-full h-10 px-3 bg-blue-50 border border-blue-100 rounded-full text-sm text-center text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -172,6 +244,7 @@ const BonusConfiguration = () => {
                             <div className="col-span-3">
                                 <input
                                     type="number"
+                                    min="0"
                                     value={row.bonusAt100}
                                     onChange={(e) => handleInputChange(row.id, 'bonusAt100', e.target.value)}
                                     className="w-full h-10 px-3 bg-blue-50 border border-blue-100 rounded-full text-sm text-center text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -181,13 +254,20 @@ const BonusConfiguration = () => {
                     ))}
                 </div>
 
+                <datalist id="bonus-kpi-options">
+                    {allKpis.filter(kpi => kpi.type === 'BONUS').map(kpi => (
+                        <option key={kpi.id} value={kpi.title} />
+                    ))}
+                </datalist>
+
                 <div className="p-6 flex justify-end">
                     <button
                         onClick={handleSave}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-200 flex items-center"
+                        disabled={isSaving}
+                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-200 flex items-center"
                     >
                         <Save className="w-5 h-5 mr-2" />
-                        Save Configuration
+                        {isSaving ? 'Saving...' : 'Save Configuration'}
                     </button>
                 </div>
             </div>

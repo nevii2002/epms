@@ -12,11 +12,12 @@ exports.getAllKPIs = async (req, res) => {
 
 exports.createKPI = async (req, res) => {
     try {
-        const { title, description, unit, weight, targetValue, dataSource, role } = req.body;
+        const { title, description, category, type, unit, weight, targetValue, dataSource, role } = req.body;
         const newKPI = await KPI.create({
             title,
             description,
-            category: 'Quantitative',
+            category: category || 'Quantitative',
+            type: type || 'EVALUATION',
             unit,
             weight,
             targetValue,
@@ -37,14 +38,15 @@ exports.createKPI = async (req, res) => {
 exports.updateKPI = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, unit, weight, targetValue, dataSource, role } = req.body;
+        const { title, description, category, type, unit, weight, targetValue, dataSource, role } = req.body;
 
         const kpi = await KPI.findByPk(id);
         if (!kpi) return res.status(404).json({ message: 'KPI not found' });
 
         kpi.title = title;
         kpi.description = description;
-        kpi.category = 'Quantitative';
+        kpi.category = category || kpi.category;
+        kpi.type = type || kpi.type;
         kpi.unit = unit;
         kpi.weight = weight;
         kpi.targetValue = targetValue;

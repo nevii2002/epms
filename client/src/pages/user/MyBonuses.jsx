@@ -14,8 +14,8 @@ const MyBonuses = () => {
             if (!user) return;
             try {
                 // Fetch KPI Targets (Potential Bonus)
-                const kpiResponse = await api.get(`/staff/${user.id}/kpis`);
-                setTargets(kpiResponse.data);
+                const kpiResponse = await api.get('/staff/my-kpis');
+                setTargets((kpiResponse.data || []).filter(kpi => kpi.type === 'BONUS' || Number(kpi.EmployeeKPI?.customBonus || 0) > 0));
 
                 // Fetch Bonus History (Actual Earned)
                 const historyResponse = await api.get(`/bonuses/employee/${user.id}`);
