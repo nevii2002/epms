@@ -8,6 +8,7 @@ const ManagerDataEntry = () => {
 
     const [metrics, setMetrics] = useState([]);
     const [logs, setLogs] = useState({});
+    const [weightDrafts, setWeightDrafts] = useState({});
 
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
@@ -15,12 +16,22 @@ const ManagerDataEntry = () => {
     // New / Edit Measure state
     const [showModal, setShowModal] = useState(false);
     const [editingMetric, setEditingMetric] = useState(null); // null = add mode
-    const [modalData, setModalData] = useState({ name: '', description: '', unit: '' });
+    const [modalData, setModalData] = useState({ name: '', description: '', unit: '', weight: 0 });
+
+    const totalWeight = Object.values(weightDrafts).reduce((sum, value) => {
+        const weight = parseFloat(value);
+        return sum + (Number.isFinite(weight) ? weight : 0);
+    }, 0);
+    const isWeightTotalValid = Math.abs(totalWeight - 100) <= 0.01;
 
     const fetchMetricsAndLogs = useCallback(async () => {
         try {
             const metricsRes = await api.get('/company-data/metrics');
             setMetrics(metricsRes.data);
+            setWeightDrafts(metricsRes.data.reduce((acc, metric) => ({
+                ...acc,
+                [metric.id]: metric.weight ?? 0
+            }), {}));
 
             const period = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
             const logsRes = await api.get(`/company-data/logs?period=${period}`);
@@ -58,32 +69,70 @@ const ManagerDataEntry = () => {
 
     const openAddModal = () => {
         setEditingMetric(null);
-        setModalData({ name: '', description: '', unit: '' });
+        setModalData({ name: '', description: '', unit: '', weight: 0 });
         setShowModal(true);
     };
 
     const openEditModal = (metric) => {
         setEditingMetric(metric);
-        setModalData({ name: metric.name, description: metric.description || '', unit: metric.unit || '' });
+        setModalData({ name: metric.name, description: metric.description || '', unit: metric.unit || '', weight: metric.weight ?? 0 });
         setShowModal(true);
     };
 
     const handleSaveModal = async () => {
         if (!modalData.name) return;
+        const weight = parseFloat(modalData.weight);
+        if (!Number.isFinite(weight) || weight < 0 || weight > 100) {
+            alert('Weight must be a number between 0 and 100.');
+            return;
+        }
         try {
+            const payload = { ...modalData, weight };
             if (editingMetric) {
                 // Update
-                const res = await api.put(`/company-data/metrics/${editingMetric.id}`, modalData);
+                const res = await api.put(`/company-data/metrics/${editingMetric.id}`, payload);
                 setMetrics(metrics.map(m => m.id === editingMetric.id ? res.data : m));
+                setWeightDrafts({ ...weightDrafts, [editingMetric.id]: res.data.weight ?? 0 });
             } else {
                 // Create
-                const res = await api.post('/company-data/metrics', modalData);
+                const res = await api.post('/company-data/metrics', payload);
                 setMetrics([...metrics, res.data]);
+                setWeightDrafts({ ...weightDrafts, [res.data.id]: res.data.weight ?? 0 });
             }
             setShowModal(false);
         } catch (err) {
             console.error('Failed to save measure:', err);
             alert('Failed to save measure. Please try again.');
+        }
+    };
+
+    const handleSaveWeights = async () => {
+        if (!isWeightTotalValid) {
+            alert(`Company metric weights must total exactly 100%. Current total: ${totalWeight.toFixed(2)}%.`);
+            return;
+        }
+
+        setSaving(true);
+        setMessage('');
+        try {
+            const response = await api.put('/company-data/metrics/weights', {
+                weights: metrics.map(metric => ({
+                    metricId: metric.id,
+                    weight: parseFloat(weightDrafts[metric.id]) || 0
+                }))
+            });
+            setMetrics(response.data.metrics);
+            setWeightDrafts(response.data.metrics.reduce((acc, metric) => ({
+                ...acc,
+                [metric.id]: metric.weight ?? 0
+            }), {}));
+            setMessage('Metric weights saved successfully');
+            setTimeout(() => setMessage(''), 3000);
+        } catch (err) {
+            console.error('Failed to save weights:', err);
+            alert(err.response?.data?.message || 'Failed to save weights.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -152,6 +201,26 @@ const ManagerDataEntry = () => {
                 <div className="mb-6 p-4 rounded-lg bg-green-50 text-green-700 font-medium border border-green-200 shadow-sm">{message}</div>
             )}
 
+            {metrics.length > 0 && (
+                <div className={`mb-6 p-4 rounded-lg border shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3 ${isWeightTotalValid ? 'bg-green-50 border-green-200 text-green-800' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+                    <div>
+                        <p className="font-bold">Company Metric Weight Total: {totalWeight.toFixed(2)}%</p>
+                        <p className="text-sm">
+                            {isWeightTotalValid
+                                ? 'Weights are balanced and can be used for company performance scoring.'
+                                : 'Adjust metric weights until the total is exactly 100%.'}
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleSaveWeights}
+                        disabled={saving || !isWeightTotalValid}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-medium"
+                    >
+                        Save Weights
+                    </button>
+                </div>
+            )}
+
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 {metrics.length === 0 ? (
                     <div className="text-center py-10 text-gray-400 italic">
@@ -162,10 +231,29 @@ const ManagerDataEntry = () => {
                         {metrics.map(metric => (
                             <div key={metric.id} className="border border-gray-100 rounded-lg p-5 border-l-4 border-l-green-500 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between shadow-sm hover:shadow-md transition-shadow">
                                 <div className="flex-1 pr-4">
-                                    <h3 className="font-bold text-gray-800 text-lg">{metric.name}</h3>
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <h3 className="font-bold text-gray-800 text-lg">{metric.name}</h3>
+                                        <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                            Saved Weight: {Number(metric.weight || 0).toFixed(2)}%
+                                        </span>
+                                    </div>
                                     {metric.description && <p className="text-sm text-gray-500 mt-1">{metric.description}</p>}
                                 </div>
                                 <div className="mt-4 md:mt-0 flex items-center space-x-2">
+                                    <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                            className="w-24 border border-gray-200 rounded-md px-3 py-2 font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                            placeholder="Weight"
+                                            value={weightDrafts[metric.id] !== undefined ? weightDrafts[metric.id] : ''}
+                                            onChange={(e) => setWeightDrafts({ ...weightDrafts, [metric.id]: e.target.value })}
+                                        />
+                                        <span className="text-xs font-bold text-gray-500">%</span>
+                                    </div>
+
                                     {/* Value input */}
                                     <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
                                         <input
@@ -253,6 +341,20 @@ const ManagerDataEntry = () => {
                                             onChange={(e) => setModalData({ ...modalData, unit: e.target.value })}
                                             placeholder="e.g. USD, Count, %"
                                         />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Weight (%)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                            value={modalData.weight}
+                                            onChange={(e) => setModalData({ ...modalData, weight: e.target.value })}
+                                            placeholder="e.g. 10"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">All company metric weights should total 100%.</p>
                                     </div>
                                 </div>
                             </div>

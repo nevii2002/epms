@@ -5,6 +5,7 @@ const { verifyToken, isAdminOrManager } = require('../middleware/authMiddleware'
 
 router.get('/metrics', verifyToken, companyDataController.getMetrics);
 router.post('/metrics', verifyToken, isAdminOrManager, companyDataController.createMetric);
+router.put('/metrics/weights', verifyToken, isAdminOrManager, companyDataController.updateMetricWeights);
 router.put('/metrics/:id', verifyToken, isAdminOrManager, companyDataController.updateMetric);
 router.delete('/metrics/:id', verifyToken, isAdminOrManager, companyDataController.deleteMetric);
 

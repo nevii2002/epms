@@ -136,10 +136,20 @@ async function seedDatabase() {
   if (seededKpiCount > 0) console.log(`Seeded ${seededKpiCount} KPIs`);
 }
 
+async function ensureCompanyMetricWeightColumn() {
+  const [columns] = await sequelize.query('PRAGMA table_info(CompanyMetrics);');
+  const hasWeight = columns.some(column => column.name === 'weight');
+  if (!hasWeight) {
+    await sequelize.query('ALTER TABLE CompanyMetrics ADD COLUMN weight FLOAT NOT NULL DEFAULT 0;');
+    console.log('Added CompanyMetrics.weight column');
+  }
+}
+
 // Database synchronization and Server Start
 sequelize.sync({ alter: false })
   .then(async () => {
     console.log('Database connected and synced');
+    await ensureCompanyMetricWeightColumn();
     await seedDatabase();
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

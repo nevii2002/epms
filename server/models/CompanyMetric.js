@@ -19,6 +19,11 @@ const CompanyMetric = sequelize.define('CompanyMetric', {
     unit: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    weight: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0,
+        allowNull: false
     }
 });
 
