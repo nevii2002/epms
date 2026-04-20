@@ -124,8 +124,14 @@ async function seedDatabase() {
   // Seed KPIs (idempotent)
   let seededKpiCount = 0;
   for (const kpi of KPI_SEED) {
-    const [, created] = await KPI.findOrCreate({ where: { title: kpi.title }, defaults: kpi });
+    const [savedKpi, created] = await KPI.findOrCreate({ where: { title: kpi.title }, defaults: kpi });
     if (created) seededKpiCount++;
+    else {
+      const needsUpdate = Object.keys(kpi).some(key => savedKpi[key] !== kpi[key]);
+      if (needsUpdate) {
+        await savedKpi.update(kpi);
+      }
+    }
   }
   if (seededKpiCount > 0) console.log(`Seeded ${seededKpiCount} KPIs`);
 }

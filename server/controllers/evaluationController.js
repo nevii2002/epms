@@ -4,11 +4,28 @@ exports.createEvaluation = async (req, res) => {
     try {
         const { employeeId, type, period, details, comments } = req.body;
         const evaluatorId = req.user.userId; // From authMiddleware
+        const evaluatorRole = req.user.role;
+
+        if (!['Self', 'Manager', 'Peer'].includes(type)) {
+            return res.status(400).json({ message: 'Invalid evaluation type.' });
+        }
+
+        if (type === 'Manager' && !['Admin', 'CEO', 'Manager'].includes(evaluatorRole)) {
+            return res.status(403).json({ message: 'Only Admins, CEOs, and Managers can submit manager evaluations.' });
+        }
+
+        if (type === 'Self' && parseInt(employeeId) !== evaluatorId) {
+            return res.status(403).json({ message: 'Self evaluations can only be submitted for your own account.' });
+        }
+
+        if (type === 'Peer' && parseInt(employeeId) === evaluatorId) {
+            return res.status(400).json({ message: 'Peer evaluations must be submitted for another employee.' });
+        }
 
         // Check if evaluation already exists for this period
-        const existing = await Evaluation.findOne({
-            where: { employeeId, period, type }
-        });
+        const existingWhere = { employeeId, period, type };
+        if (type === 'Peer') existingWhere.evaluatorId = evaluatorId;
+        const existing = await Evaluation.findOne({ where: existingWhere });
 
         if (existing) {
             return res.status(400).json({ message: 'Evaluation already exists for this period.' });

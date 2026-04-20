@@ -1,18 +1,48 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import StarRating from '../../components/StarRating';
 import { evaluationCriteria } from '../../constants/evaluationCriteria';
+import api from '../../api/axios';
+import { useAuth } from '../../context/useAuth';
 
 const SelfEvaluation = () => {
-    // Hardcoded KPIs to match the specific requirement
-    const specificKPIs = evaluationCriteria.map((criterion, index) => ({ id: index + 1, ...criterion }));
-
+    const { user } = useAuth();
+    const [specificKPIs, setSpecificKPIs] = useState([]);
+    const [missingCriteria, setMissingCriteria] = useState([]);
     const [ratings, setRatings] = useState({});
     const [globalComment, setGlobalComment] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [selectedYear, setSelectedYear] = useState(2026);
     const [selectedMonth, setSelectedMonth] = useState(4);
     const selectedPeriod = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
+
+    useEffect(() => {
+        const fetchCriteria = async () => {
+            setLoading(true);
+            try {
+                const response = await api.get('/kpis');
+                const qualitativeKpis = response.data.filter(k => k.category === 'Qualitative');
+                const normalizedKpis = evaluationCriteria
+                    .map((criterion) => {
+                        const savedKpi = qualitativeKpis.find(k => k.title === criterion.title);
+                        return savedKpi ? { ...savedKpi, description: criterion.description } : null;
+                    })
+                    .filter(Boolean);
+                setSpecificKPIs(normalizedKpis);
+                setMissingCriteria(evaluationCriteria
+                    .filter((criterion) => !qualitativeKpis.some(k => k.title === criterion.title))
+                    .map((criterion) => criterion.title));
+            } catch (err) {
+                console.error('Failed to load self evaluation criteria', err);
+                setErrorMessage('Failed to load evaluation criteria.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCriteria();
+    }, []);
 
     const handleRatingChange = (kpiId, rating) => {
         setRatings(prev => ({
@@ -25,18 +55,44 @@ const SelfEvaluation = () => {
         const values = Object.values(ratings);
         if (values.length === 0) return 0;
         const sum = values.reduce((a, b) => a + b, 0);
-        return (sum / specificKPIs.length).toFixed(1); // Divide by total KPIs to treat unrated as 0? Or divide by rated? Usually by total for "final mark". Let's do rated to be nicer, or total to be accurate. Let's do rated for now as form validates later? No, usually out of 5 for the whole form. Let's do: sum / 5 (total items).
+        return (sum / specificKPIs.length).toFixed(1);
     };
 
     const currentScore = calculateAverage();
 
     const handleSubmit = async () => {
+        if (!user?.id) {
+            setErrorMessage('You must be logged in to submit a self evaluation.');
+            return;
+        }
+        if (specificKPIs.length === 0) {
+            setErrorMessage('No evaluation criteria are available yet.');
+            return;
+        }
         setLoading(true);
-        // Simulate API call for now or map to backend structure
-        setTimeout(() => {
-            setLoading(false);
+        setErrorMessage('');
+
+        const details = Object.entries(ratings).map(([kpiId, rating]) => ({
+            kpiId: parseInt(kpiId),
+            rating,
+            comment: ''
+        }));
+
+        try {
+            await api.post('/evaluations', {
+                employeeId: user.id,
+                type: 'Self',
+                period: selectedPeriod,
+                details,
+                comments: globalComment
+            });
             setSubmitted(true);
-        }, 1000);
+        } catch (err) {
+            console.error('Submit Error:', err);
+            setErrorMessage(err.response?.data?.message || 'Failed to submit self evaluation.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (submitted) {
@@ -65,6 +121,12 @@ const SelfEvaluation = () => {
                     <div>
                         <h2 className="text-xl font-bold text-gray-800">Employee Self-Evaluation Form</h2>
                         <p className="mt-1 text-sm text-gray-500">Rate your performance on the displayed KPIs.</p>
+                        {errorMessage && <div className="mt-4 bg-red-100 text-red-700 p-3 rounded text-sm">{errorMessage}</div>}
+                        {missingCriteria.length > 0 && (
+                            <div className="mt-4 bg-amber-100 text-amber-800 p-3 rounded text-sm">
+                                Missing KPI Framework items: {missingCriteria.join(', ')}. They will appear after the backend seed runs.
+                            </div>
+                        )}
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         <select
@@ -95,18 +157,24 @@ const SelfEvaluation = () => {
                 </div>
 
                 <div className="p-6 space-y-6">
-                    {specificKPIs.map((kpi) => (
-                        <div key={kpi.id} className="border border-gray-200 rounded-lg p-4">
-                            <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-bold text-gray-800 text-md">{kpi.title}</h3>
-                                <StarRating
-                                    rating={ratings[kpi.id] || 0}
-                                    onRatingChange={(r) => handleRatingChange(kpi.id, r)}
-                                />
+                    {loading && specificKPIs.length === 0 ? (
+                        <p className="text-gray-500 text-center">Loading evaluation criteria...</p>
+                    ) : specificKPIs.length === 0 ? (
+                        <p className="text-gray-500 text-center">No qualitative evaluation criteria found. Please add them in KPI Framework.</p>
+                    ) : (
+                        specificKPIs.map((kpi) => (
+                            <div key={kpi.id} className="border border-gray-200 rounded-lg p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-bold text-gray-800 text-md">{kpi.title}</h3>
+                                    <StarRating
+                                        rating={ratings[kpi.id] || 0}
+                                        onRatingChange={(r) => handleRatingChange(kpi.id, r)}
+                                    />
+                                </div>
+                                <p className="text-sm text-gray-600 mb-0">{kpi.description}</p>
                             </div>
-                            <p className="text-sm text-gray-600 mb-0">{kpi.description}</p>
-                        </div>
-                    ))}
+                        ))
+                    )}
 
                     <div className="border border-gray-200 rounded-lg p-4">
                         <h3 className="font-bold text-gray-800 text-md mb-2">Additional Comments</h3>

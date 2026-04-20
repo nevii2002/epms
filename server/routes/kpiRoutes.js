@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const kpiController = require('../controllers/kpiController');
+const { verifyToken, isAdminOrManager } = require('../middleware/authMiddleware');
 
-// TODO: Add Auth/Admin middleware protection later
+router.use(verifyToken);
+
 router.get('/', kpiController.getAllKPIs);
-router.post('/', kpiController.createKPI);
-router.put('/:id', kpiController.updateKPI);
-router.delete('/:id', kpiController.deleteKPI);
+router.post('/', isAdminOrManager, kpiController.createKPI);
+router.put('/:id', isAdminOrManager, kpiController.updateKPI);
+router.delete('/:id', isAdminOrManager, kpiController.deleteKPI);
 
 module.exports = router;

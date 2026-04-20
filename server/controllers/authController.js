@@ -8,8 +8,11 @@ const SMTP_HOST = process.env.SMTP_HOST;
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const DEFAULT_FRONTEND_URL = IS_PRODUCTION
+    ? 'https://polite-pebble-07dcc0400.7.azurestaticapps.net'
+    : 'http://localhost:3000';
+const FRONTEND_URL = process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL;
 
 let transporter = null;
 
@@ -25,6 +28,22 @@ if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
     console.warn('⚠️  SMTP not configured. Password reset emails will not be sent.');
 }
 // --------------------------------
+
+function resolveFrontendUrl(req) {
+    const origin = req.get('origin');
+    if (origin) return origin;
+
+    const referer = req.get('referer');
+    if (referer) {
+        try {
+            return new URL(referer).origin;
+        } catch {
+            return FRONTEND_URL;
+        }
+    }
+
+    return FRONTEND_URL;
+}
 
 exports.register = async (req, res) => {
     try {
@@ -74,6 +93,9 @@ exports.login = async (req, res) => {
         if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
+        if (!user.password) {
+            return res.status(400).json({ message: 'Account is not active yet. Please register first.' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -101,7 +123,7 @@ exports.forgotPassword = async (req, res) => {
         // Generate a temporary token valid for 15 minutes
         const resetToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'techznap_secret_key', { expiresIn: '15m' });
 
-        const resetLink = `${FRONTEND_URL}/reset-password/${resetToken}`;
+        const resetLink = `${resolveFrontendUrl(req)}/reset-password/${resetToken}`;
 
         if (transporter) {
             try {
