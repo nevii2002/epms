@@ -150,6 +150,32 @@ exports.getDashboardStats = async (req, res) => {
             });
             const managerAvg = managerEvals[0]?.avgRating ? parseFloat(managerEvals[0].avgRating) : 0;
             const managerScore = (managerAvg / 5) * 100;
+            const improvementAreas = [];
+
+            const managerDetails = await EvaluationDetail.findAll({
+                include: [
+                    {
+                        model: Evaluation,
+                        where: { employeeId: emp.id, type: 'Manager', period: targetPeriod },
+                        attributes: []
+                    },
+                    {
+                        model: KPI,
+                        as: 'kpi',
+                        attributes: ['title']
+                    }
+                ],
+                order: [['rating', 'ASC']],
+                limit: 3
+            });
+
+            managerDetails
+                .filter(detail => Number(detail.rating) <= 3 && detail.kpi?.title)
+                .forEach(detail => improvementAreas.push({
+                    area: detail.kpi.title,
+                    reason: `Manager rating ${detail.rating}/5`,
+                    action: `Improve consistency in ${detail.kpi.title.toLowerCase()}.`
+                }));
 
             // 2. Quantitative Score (Weighted Calculation)
             const quantLogs = await QuantitativeLog.findAll({
@@ -170,6 +196,14 @@ exports.getDashboardStats = async (req, res) => {
                     const score = Math.min((actual / target) * 100, 100);
                     totalWeightedScore += (score * weight);
                     totalWeights += weight;
+
+                    if (score < 70 && log.KPI?.title) {
+                        improvementAreas.push({
+                            area: log.KPI.title,
+                            reason: `${Math.round(score)}% of target`,
+                            action: `Focus on reaching the ${log.KPI.title.toLowerCase()} target.`
+                        });
+                    }
                 });
 
                 // If weighting is not configured properly, default to a simple average
@@ -188,13 +222,17 @@ exports.getDashboardStats = async (req, res) => {
 
             if (compositeScore > 0) {
                 const cappedCompositeScore = Math.min(compositeScore, 100);
+                const uniqueImprovementAreas = improvementAreas.filter((item, index, list) =>
+                    list.findIndex(existing => existing.area === item.area) === index
+                ).slice(0, 3);
                 allScores.push({
                     id: emp.id,
                     username: emp.username,
                     profilePicture: emp.profilePicture,
                     position: emp.position,
                     compositeScore: cappedCompositeScore,
-                    avgRating: (cappedCompositeScore / 20).toFixed(1)
+                    avgRating: (cappedCompositeScore / 20).toFixed(1),
+                    improvementAreas: uniqueImprovementAreas
                 });
             }
         }
@@ -256,7 +294,9 @@ exports.getDashboardStats = async (req, res) => {
         const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         distribution.forEach(d => { ratingDistribution[d.rating] = parseInt(d.count); });
 
-        res.json({ totalStaff, totalKPIs, avgPerformance, ratingDistribution, employeeOfTheMonth, underperformingEmployees });
+        const adminOnlyData = ['Admin', 'CEO'].includes(role) ? { underperformingEmployees } : {};
+
+        res.json({ totalStaff, totalKPIs, avgPerformance, ratingDistribution, employeeOfTheMonth, ...adminOnlyData });
     } catch (error) {
         console.error("Dashboard Stats Error:", error);
         res.status(500).json({ message: 'Server error', error: error.message });

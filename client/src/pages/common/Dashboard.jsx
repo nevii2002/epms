@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { Users, Activity, Award } from 'lucide-react';
+import { useAuth } from '../../context/useAuth';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 
 const Dashboard = ({ role }) => {
+    const { user } = useAuth();
     const [stats, setStats] = useState({ totalStaff: 0, totalKPIs: 0, avgPerformance: 0 });
     const [loading, setLoading] = useState(true);
+    const canViewUnderperforming = user?.role === 'Admin' || user?.role === 'CEO';
     const employeeOfTheMonthScore = stats.employeeOfTheMonth
         ? Math.min(parseFloat(stats.employeeOfTheMonth.compositeScore) || 0, 100).toFixed(1)
         : '0.0';
@@ -137,29 +140,47 @@ const Dashboard = ({ role }) => {
                 </div>
             )}
 
-            {/* Underperforming Employees Banner (Admin & Manager Only) */}
-            {!loading && (role === 'Admin' || role === 'Manager') && stats.underperformingEmployees && stats.underperformingEmployees.length > 0 && (
+            {/* Underperforming Employees Banner (Admin/CEO Only) */}
+            {!loading && canViewUnderperforming && stats.underperformingEmployees && stats.underperformingEmployees.length > 0 && (
                 <div className="bg-white shadow rounded-lg p-6 mb-8 border-l-4 border-red-500">
                     <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                         <Activity className="w-5 h-5 mr-2 text-red-500" />
-                        Needs Attention (Underperforming Employees)
+                        Needs Attention: Underperforming Employees
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {stats.underperformingEmployees.map(emp => (
-                            <div key={emp.id} className="border border-gray-200 rounded-lg p-4 flex items-center bg-red-50/30">
-                                <div className="h-12 w-12 rounded-full border-2 border-red-100 bg-white flex items-center justify-center overflow-hidden mr-4">
-                                    {emp.profilePicture ? (
-                                        <img src={`${API_BASE}${emp.profilePicture}`} alt="Avatar" className="h-full w-full object-cover" />
-                                    ) : (
-                                        <span className="font-bold text-red-500">{emp.username?.charAt(0).toUpperCase()}</span>
-                                    )}
+                            <div key={emp.id} className="border border-gray-200 rounded-lg p-4 bg-red-50/30">
+                                <div className="flex items-center mb-3">
+                                    <div className="h-12 w-12 rounded-full border-2 border-red-100 bg-white flex items-center justify-center overflow-hidden mr-4">
+                                        {emp.profilePicture ? (
+                                            <img src={`${API_BASE}${emp.profilePicture}`} alt="Avatar" className="h-full w-full object-cover" />
+                                        ) : (
+                                            <span className="font-bold text-red-500">{emp.username?.charAt(0).toUpperCase()}</span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h5 className="font-semibold text-gray-900">{emp.username}</h5>
+                                        <p className="text-xs text-red-600 font-medium pb-1">{emp.position || 'Employee'}</p>
+                                        <span className="px-2 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold">
+                                            Score: {Math.min(emp.compositeScore, 100).toFixed(1)} / 100
+                                        </span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h5 className="font-semibold text-gray-900">{emp.username}</h5>
-                                    <p className="text-xs text-red-600 font-medium pb-1">{emp.position || 'Employee'}</p>
-                                    <span className="px-2 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold">
-                                        Score: {Math.min(emp.compositeScore, 100).toFixed(1)} / 100
-                                    </span>
+                                <div className="border-t border-red-100 pt-3">
+                                    <p className="text-xs font-bold text-gray-700 uppercase mb-2">What they should improve</p>
+                                    {emp.improvementAreas?.length > 0 ? (
+                                        <ul className="space-y-2">
+                                            {emp.improvementAreas.map((item, index) => (
+                                                <li key={`${emp.id}-${item.area}-${index}`} className="text-xs text-gray-700">
+                                                    <span className="font-semibold text-gray-900">{item.area}</span>
+                                                    <span className="text-gray-500"> - {item.reason}</span>
+                                                    <div className="text-gray-600 mt-0.5">{item.action}</div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="text-xs text-gray-500">Review manager feedback and assigned KPI actuals for this period.</p>
+                                    )}
                                 </div>
                             </div>
                         ))}
